@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dishwashing Joys</title>
+    <style>
+        @font-face {
+            font-family: 'Mega';
+            src: url('mega.ttf') format('truetype');
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Mega', sans-serif;
+            background: #1a1a1a;
+        }
+
+        #mainMenu {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(45deg, #2c3e50, #3498db);
+            z-index: 100;
+        }
+
+        #gameContainer {
+            display: none;
+            width: 800px;
+            margin: 20px auto;
+            position: relative;
+        }
+
+        canvas {
+            border: 2px solid black;
+        }
+
+        #scoreDisplay {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 20px;
+            font-family: 'Mega', sans-serif;
+            color: white;
+        }
+
+        #promptText {
+            position: absolute;
+            top: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Mega', sans-serif;
+            font-size: 18px;
+            color: white;
+            text-align: center;
+        }
+
+        #washingProgress {
+            position: absolute;
+            top: 90px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 20px;
+            background-color: #333;
+            border: 5px solid #000000;
+            display: none;
+        }
+
+        #progressBar {
+            width: 0%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                45deg,
+                #4CAF50,
+                #4CAF50 10px,
+                #45a049 10px,
+                #45a049 20px
+            );
+            transition: width 0.05s steps(20);
+        }
+
+        .menu-title {
+            font-size: 48px;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            margin-bottom: 40px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .menu-button {
+            font-family: 'Mega', sans-serif;
+            font-size: 24px;
+            padding: 15px 40px;
+            margin: 10px;
+            border: none;
+            border-radius: 8px;
+            background: #2ecc71;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+            width: 200px;
+            text-align: center;
+        }
+
+        .menu-button:hover {
+            transform: scale(1.1);
+            background: #27ae60;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            z-index: 1000;
+            width: 400px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-title {
+            font-size: 24px;
+            margin-bottom: 20px;
+            text-align: center;
+            color: #2c3e50;
+        }
+
+        .modal-content {
+            margin-bottom: 20px;
+        }
+
+        .close-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #7f8c8d;
+        }
+
+        .settings-control {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            justify-content: space-between;
+        }
+
+        .shop-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border: 1px solid #ddd;
+            margin: 5px 0;
+            border-radius: 5px;
+        }
+
+        .shop-item button {
+            font-family: 'Mega', sans-serif;
+            padding: 5px 15px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .shop-item button:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+
+        #inGameMenu {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 90;
+        }
+
+        .in-game-button {
+            font-family: 'Mega', sans-serif;
+            font-size: 18px;
+            padding: 8px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 4px;
+            background: #2ecc71;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+        }
+
+        .in-game-button:hover {
+            transform: scale(1.1);
+            background: #27ae60;
+        }
+
+        #pauseOverlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 95;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .pause-menu {
+            background: rgba(44, 62, 80, 0.95);
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            min-width: 300px;
+            display: flex; /* Add flexbox */
+            flex-direction: column; /* Stack items vertically */
+            align-items: center; /* Center children horizontally */
+        }
+
+        .pause-title {
+            color: white;
+            font-size: 36px;
+            margin-bottom: 30px;
+            font-family: 'Mega', sans-serif;
+        }
+
+        .pause-button {
+            font-family: 'Mega', sans-serif;
+            font-size: 24px;
+            padding: 15px 40px;
+            margin: 10px;
+            border: none;
+            border-radius: 8px;
+            background: #2ecc71;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+            width: 200px;
+            text-align: center;
+            /* Removed unnecessary display: flex */
+        }
+
+        .pause-button:hover {
+            transform: scale(1.1);
+            background: #27ae60;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+            100% { transform: translateY(0px); }
+        }
+    </style>
+</head>
+<body>
+    <div id="mainMenu">
+        <h1 class="menu-title">Dishwashing Joys</h1>
+        <button class="menu-button" onclick="startGame()">Play</button>
+        <button class="menu-button" onclick="openShop()">Shop</button>
+        <button class="menu-button" onclick="openSettings()">Settings</button>
+        <button class="menu-button" onclick="openHelp()">Help</button>
+    </div>
+
+    <div id="inGameMenu" style="display: none;">
+        <button class="in-game-button" onclick="openShop()">Shop</button>
+        <button class="in-game-button" onclick="pauseGame()">Pause</button>
+    </div>
+
+    <div id="pauseOverlay" style="display: none;">
+        <div class="pause-menu">
+            <h2 class="pause-title">PAUSED</h2>
+            <button class="pause-button" onclick="resumeGame()">Resume</button>
+            <button class="pause-button" onclick="openSettings()">Settings</button>
+            <button class="pause-button" onclick="returnToMainMenu()">Main Menu</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modalOverlay"></div>
+
+    <div id="settingsModal" class="modal">
+        <span class="close-button" onclick="closeModal('settingsModal')">&times;</span>
+        <h2 class="modal-title">Settings</h2>
+        <div class="modal-content">
+            <div class="settings-control">
+                <label>Background Music Volume:</label>
+                <input type="range" min="0" max="100" value="50" id="bgmVolume">
+            </div>
+            <div class="settings-control">
+                <label>Sound Effects Volume:</label>
+                <input type="range" min="0" max="100" value="50" id="sfxVolume">
+            </div>
+        </div>
+    </div>
+
+    <div id="helpModal" class="modal">
+        <span class="close-button" onclick="closeModal('helpModal')">&times;</span>
+        <h2 class="modal-title">How to Play</h2>
+        <div class="modal-content">
+            <p>Controls:</p>
+            <ul>
+                <li>user WASD or Arrow Keys to move</li>
+                <li>"E" to pick up Dirty Dishes</li>
+                <li>Hold "E" to wash Dishes</li>
+                <li>"E" to put away dishes</li>
+            </ul>
+            <p>Tips:</p>
+            <ul>
+                <li>Wait for dishes to build up before collection</li>
+                <li>Upgrade your speed and washing abilities in the shop</li>
+                <li>Keep an eye on your score to buy upgrades</li>
+            </ul>
+            <p>Where to put dishes on shelf:</p>
+            <ul>
+                <li>Bowls go on top shelf</li>
+                <li>Plates go on middle shelf</li>
+                <li>Cups go on bottom shelf</li>
+            </ul>
+        </div>
+    </div>
+
+    <div id="shopModal" class="modal">
+        <span class="close-button" onclick="closeModal('shopModal')">&times;</span>
+        <h2 class="modal-title">Upgrade Shop</h2>
+        <div class="modal-content">
+            <div class="shop-item">
+                <div>
+                    <h3>Speed Boost</h3>
+                    <p>Move 20% faster</p>
+                </div>
+                <button onclick="purchaseSpeedUpgrade()" id="speedUpgradeBtn">Buy (100)</button>
+            </div>
+            <div class="shop-item">
+                <div>
+                    <h3>Washing Master</h3>
+                    <p>Wash dishes 30% faster</p>
+                </div>
+                <button onclick="purchaseWashingUpgrade()" id="washingUpgradeBtn">Buy (150)</button>
+            </div>
+            <div class="shop-item">
+                <div>
+                    <h3>Extra Storage</h3>
+                    <p>Store more dishes on shelves</p>
+                </div>
+                <button onclick="purchaseStorageUpgrade()" id="storageUpgradeBtn">Buy (200)</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        <div id="scoreDisplay">Score: 0</div>
+        <div id="promptText"></div>
+        <div id="washingProgress">
+            <div id="progressBar"></div>
+        </div>
+    </div>
+
+    <script>
+        const GAME_WIDTH = 800;
+        const GAME_HEIGHT = 600;
+        const PLAYER_SIZE = 48;
+        const PLATE_SIZE = 90;
+        const BOWL_SIZE = 85;
+        const CUP_SIZE = 60;
+        let MAX_DISHES_PER_TYPE = 5;
+        const DISH_REMOVAL_INTERVAL = 5000;
+        const MIN_DISHES_BEFORE_REMOVAL = 3;
+
+        // Modified sink dimensions
+        const SINK_WIDTH = 80;
+        const SINK_HEIGHT = 120;
+
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const promptText = document.getElementById('promptText');
+
+        // Audio setup
+        const bgMusic = new Audio('music.mp3');
+        bgMusic.loop = true;
+        let bgmVolume = 50;
+        let sfxVolume = 50;
+
+        // Game state
+        let gameStarted = false;
+        const game = {
+            player: {
+                x: GAME_WIDTH / 2,
+                y: GAME_HEIGHT / 2,
+                speed: 3,
+                washingSpeed: 1,
+                score: 0,
+                heldItem: null,
+                isWashing: false
+            },
+            storedDishes: {
+                plate: 0,
+                bowl: 0,
+                cup: 0
+            },
+            lastDishRemoval: {
+                plate: Date.now(),
+                bowl: Date.now(),
+                cup: Date.now()
+            },
+            keys: {
+                up: false,
+                down: false,
+                left: false,
+                right: false,
+                e: false
+            },
+            zones: {
+                dishSpawn: { x: 550, y: 80, width: 64, height: 64 },
+                sink: { x: GAME_WIDTH - 700, y: 100, width: SINK_WIDTH, height: SINK_HEIGHT },
+                shelf: {
+                    x: GAME_WIDTH - 200,
+                    y: GAME_HEIGHT - 300,
+                    width: 150,
+                    height: 250,
+                    zones: {
+                        bowl: { x: GAME_WIDTH - 180, y: GAME_HEIGHT - 280, width: 110, height: 64 },
+                        plate: { x: GAME_WIDTH - 180, y: GAME_HEIGHT - 200, width: 110, height: 64 },
+                        cup: { x: GAME_WIDTH - 180, y: GAME_HEIGHT - 120, width: 110, height: 64 }
+                    }
+                }
+            }
+        };
+
+        const images = {};
+        ['dirtyPlate', 'cleanPlate', 'dirtyBowl', 'cleanBowl', 'dirtyCup', 'cleanCup', 'shelf', 'sink', 'bustub'].forEach(name => {
+            images[name] = new Image();
+            images[name].src = `art/${name.toLowerCase()}.png`;
+        });
+
+        // Washing progress
+        let washingProgress = 0;
+        const progressBar = document.getElementById('progressBar');
+        const washingProgressElement = document.getElementById('washingProgress');
+
+        let imagesLoaded = 0;
+        Object.values(images).forEach(img => {
+            img.onload = () => {
+                imagesLoaded++;
+                if (imagesLoaded === Object.keys(images).length) {
+                    console.log('All images loaded');
+                }
+            };
+            img.onerror = (e) => {
+                console.error('Failed to load image:', e.target.src);
+                imagesLoaded++;
+                if (imagesLoaded === Object.keys(images).length) {
+                    console.log('All images loaded (some with errors)');
+                }
+            };
+        });
+
+        function updateWashingProgress() {
+            if (game.player.isWashing) {
+                washingProgressElement.style.display = 'block';
+                washingProgress += game.player.washingSpeed;
+                progressBar.style.width = `${(washingProgress / 100) * 100}%`;
+                
+                if (washingProgress >= 100) {
+                    game.player.heldItem.state = 'clean';
+                    game.player.score += 10 * game.player.washingSpeed;
+                    updateScore();
+                    game.player.isWashing = false;
+                    washingProgress = 0;
+                    washingProgressElement.style.display = 'none';
+                }
+            } else {
+                washingProgress = 0;
+                progressBar.style.width = '0%';
+                washingProgressElement.style.display = 'none';
+            }
+        }
+
+        function updatePrompt() {
+            if (game.player.heldItem) {
+                if (game.player.heldItem.state === 'dirty' && checkCollision(game.player, game.zones.sink)) {
+                    promptText.textContent = 'Hold "E" to wash Dishes';
+                } else if (game.player.heldItem.state === 'clean') {
+                    promptText.textContent = '"E" to put away dishes';
+                }
+            } else if (checkCollision(game.player, game.zones.dishSpawn)) {
+                promptText.textContent = '"E" to pick up Dirty Dishes';
+            } else {
+                promptText.textContent = '';
+            }
+        }
+
+        function handleInteraction() {
+            if (!game.player.heldItem) {
+                if (checkCollision(game.player, game.zones.dishSpawn)) {
+                    game.player.heldItem = {
+                        type: ['plate', 'bowl', 'cup'][Math.floor(Math.random() * 3)],
+                        state: 'dirty'
+                    };
+                }
+            } else if (game.player.heldItem.state === 'dirty') {
+                if (checkCollision(game.player, game.zones.sink) && game.keys.e) {
+                    game.player.isWashing = true;
+                }
+            } else if (game.player.heldItem.state === 'clean') {
+                const shelfZone = game.zones.shelf.zones[game.player.heldItem.type];
+                if (checkCollision(game.player, shelfZone) && 
+                    game.storedDishes[game.player.heldItem.type] < MAX_DISHES_PER_TYPE) {
+                    game.storedDishes[game.player.heldItem.type]++;
+                    game.player.heldItem = null;
+                    game.player.score += 5;
+                    updateScore();
+                }
+            }
+        }
+
+        function checkCollision(obj1, obj2) {
+            return obj1.x < obj2.x + obj2.width &&
+                   obj1.x + PLAYER_SIZE > obj2.x &&
+                   obj1.y < obj2.y + obj2.height &&
+                   obj1.y + PLAYER_SIZE > obj2.y;
+        }
+
+        function checkCollision(obj1, obj2) {
+            return obj1.x < obj2.x + obj2.width &&
+                   obj1.x + PLAYER_SIZE > obj2.x &&
+                   obj1.y < obj2.y + obj2.height &&
+                   obj1.y + PLAYER_SIZE > obj2.y;
+        }
+
+        function updateScore() {
+            scoreDisplay.textContent = 'Score: ' + Math.floor(game.player.score);
+        }
+
+        function purchaseSpeedUpgrade() {
+            if (game.player.score >= 100) {
+                game.player.speed *= 1.2;
+                game.player.score -= 100;
+                updateScore();
+                updateShopButtons();
+            }
+        }
+
+        function purchaseWashingUpgrade() {
+            if (game.player.score >= 150) {
+                game.player.washingSpeed *= 1.3;
+                game.player.score -= 150;
+                updateScore();
+                updateShopButtons();
+            }
+        }
+
+        function purchaseStorageUpgrade() {
+            if (game.player.score >= 200) {
+                MAX_DISHES_PER_TYPE += 2;
+                game.player.score -= 200;
+                updateScore();
+                updateShopButtons();
+            }
+        }
+
+        function update() {
+            if (game.keys.up) {
+                game.player.y = Math.max(0, game.player.y - game.player.speed);
+            }
+            if (game.keys.down) {
+                game.player.y = Math.min(GAME_HEIGHT - PLAYER_SIZE, game.player.y + game.player.speed);
+            }
+            if (game.keys.left) {
+                game.player.x = Math.max(0, game.player.x - game.player.speed);
+            }
+            if (game.keys.right) {
+                game.player.x = Math.min(GAME_WIDTH - PLAYER_SIZE, game.player.x + game.player.speed);
+            }
+
+            updatePrompt();
+            
+            if (game.player.heldItem && game.player.heldItem.state === 'dirty' && 
+                checkCollision(game.player, game.zones.sink) && game.keys.e) {
+                handleInteraction();
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+            // Draw flipped sink
+            if (images.sink) {
+                ctx.save();
+                ctx.translate(game.zones.sink.x + game.zones.sink.width, game.zones.sink.y);
+                ctx.scale(-1.2, 1);
+                ctx.drawImage(images.sink, 0, 0, game.zones.sink.width, game.zones.sink.height);
+                ctx.restore();
+            }
+
+            if (images.bustub) {
+                const scaleFactor = 2.5; // Adjust this value to make the image larger or smaller
+                const newWidth = game.zones.dishSpawn.width * scaleFactor;
+                const newHeight = game.zones.dishSpawn.height * scaleFactor;
+
+                ctx.drawImage(
+                    images.bustub, 
+                    game.zones.dishSpawn.x, 
+                    game.zones.dishSpawn.y, 
+                    newWidth, 
+                    newHeight
+                );
+            }
+
+            // Draw shelf and stored dishes
+            if (images.shelf) {
+                ctx.drawImage(images.shelf, 
+                            game.zones.shelf.x, 
+                            game.zones.shelf.y, 
+                            game.zones.shelf.width, 
+                            game.zones.shelf.height);
+                
+                Object.entries(game.storedDishes).forEach(([type, count]) => {
+                    if (count > 0) {
+                        const zone = game.zones.shelf.zones[type];
+                        const image = images[`clean${type.charAt(0).toUpperCase()}${type.slice(1)}`];
+                        if (image) {
+                            ctx.drawImage(image, zone.x, zone.y, 40, 40);
+                            ctx.fillStyle = '#000';
+                            ctx.font = '14px Mega';
+                            ctx.fillText(`x${count}`, zone.x + 45, zone.y + 25);
+                        }
+                    }
+                });
+            }
+
+            // Draw player
+            ctx.fillStyle = '#4A5568';
+            ctx.fillRect(game.player.x, game.player.y, PLAYER_SIZE, PLAYER_SIZE);
+
+            // Draw held item
+            if (game.player.heldItem) {
+                const itemImage = images[
+                    (game.player.heldItem.state === 'clean' ? 'clean' : 'dirty') +
+                    game.player.heldItem.type.charAt(0).toUpperCase() +
+                    game.player.heldItem.type.slice(1)
+                ];
+                if (itemImage) {
+                    let itemSize;
+                    switch(game.player.heldItem.type) {
+                        case 'plate':
+                            itemSize = PLATE_SIZE;
+                            break;
+                        case 'bowl':
+                            itemSize = BOWL_SIZE;
+                            break;
+                        case 'cup':
+                            itemSize = CUP_SIZE;
+                            break;
+                        default:
+                            itemSize = HELD_DISH_SIZE;
+                    }
+                    ctx.drawImage(itemImage,
+                        game.player.x + PLAYER_SIZE - (itemSize/2),
+                        game.player.y - (itemSize/2),
+                        itemSize,
+                        itemSize
+                    );
+                }
+            }
+        }
+
+        function gameLoop() {
+            if (!gamePaused) {
+                update();
+                updateWashingProgress();
+                draw();
+            }
+            requestAnimationFrame(gameLoop);
+        }
+
+        function openShop() {
+            openModal('shopModal');
+            updateShopButtons();
+            if (gameStarted) {
+                pauseGame();
+            }
+        }
+
+        function removeDishes() {
+            const now = Date.now();
+            Object.keys(game.storedDishes).forEach(type => {
+                if (game.storedDishes[type] >= MIN_DISHES_BEFORE_REMOVAL && 
+                    now - game.lastDishRemoval[type] > DISH_REMOVAL_INTERVAL) {
+                    game.storedDishes[type]--;
+                    game.lastDishRemoval[type] = now;
+                }
+            });
+        }
+
+        // Event Listeners
+        window.addEventListener('keydown', (e) => {
+            switch(e.key.toLowerCase()) {
+                case 'w': case 'arrowup': game.keys.up = true; break;
+                case 's': case 'arrowdown': game.keys.down = true; break;
+                case 'a': case 'arrowleft': game.keys.left = true; break;
+                case 'd': case 'arrowright': game.keys.right = true; break;
+                case 'e': 
+                    game.keys.e = true;
+                    if (!game.player.isWashing) {
+                        handleInteraction();
+                    }
+                    break;
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            switch(e.key.toLowerCase()) {
+                case 'w': case 'arrowup': game.keys.up = false; break;
+                case 's': case 'arrowdown': game.keys.down = false; break;
+                case 'a': case 'arrowleft': game.keys.left = false; break;
+                case 'd': case 'arrowright': game.keys.right = false; break;
+                case 'e': 
+                    game.keys.e = false;
+                    game.player.isWashing = false;
+                    break;
+            }
+        });
+
+        let gamePaused = false;
+
+        function startGame() {
+            if (!gameStarted) {
+                document.getElementById('mainMenu').style.display = 'none';
+                document.getElementById('gameContainer').style.display = 'block';
+                document.getElementById('inGameMenu').style.display = 'block';
+                gameStarted = true;
+                bgMusic.play();
+                gameLoop();
+                setInterval(removeDishes, 1000);
+            }
+        }
+
+        function pauseGame() {
+            gamePaused = true;
+            document.getElementById('pauseOverlay').style.display = 'flex';
+            bgMusic.pause();
+        }
+
+        function resumeGame() {
+            gamePaused = false;
+            document.getElementById('pauseOverlay').style.display = 'none';
+            bgMusic.play();
+        }
+
+        function returnToMainMenu() {
+            // Reset game state
+            gamePaused = false;
+            gameStarted = false;
+            game.player.score = 0;
+            game.player.heldItem = null;
+            game.player.x = GAME_WIDTH / 2;
+            game.player.y = GAME_HEIGHT / 2;
+            game.storedDishes = { plate: 0, bowl: 0, cup: 0 };
+            
+            // Hide game elements
+            document.getElementById('pauseOverlay').style.display = 'none';
+            document.getElementById('gameContainer').style.display = 'none';
+            document.getElementById('inGameMenu').style.display = 'none';
+            
+            // Show main menu
+            document.getElementById('mainMenu').style.display = 'flex';
+            
+            // Stop music
+            bgMusic.pause();
+            bgMusic.currentTime = 0;
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                if (gameStarted) {
+                    if (gamePaused) {
+                        resumeGame();
+                    } else {
+                        pauseGame();
+                    }
+                }
+                closeModal('settingsModal');
+                closeModal('helpModal');
+                closeModal('shopModal');
+            }
+        });
+
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = 'block';
+            document.getElementById('modalOverlay').style.display = 'block';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+            document.getElementById('modalOverlay').style.display = 'none';
+            if (gameStarted && gamePaused && !document.getElementById('pauseOverlay').style.display === 'flex') {
+                resumeGame();
+            }
+        }
+
+        function openSettings() {
+            openModal('settingsModal');
+        }
+
+        function openHelp() {
+            openModal('helpModal');
+        }
+
+        function openShop() {
+            openModal('shopModal');
+            updateShopButtons();
+        }
+
+        function updateShopButtons() {
+            document.getElementById('speedUpgradeBtn').disabled = game.player.score < 100;
+            document.getElementById('washingUpgradeBtn').disabled = game.player.score < 150;
+            document.getElementById('storageUpgradeBtn').disabled = game.player.score < 200;
+        }
+
+        // Volume control
+        function updateBGMVolume() {
+            bgMusic.volume = bgmVolume / 100;
+        }
+
+        document.getElementById('bgmVolume').addEventListener('input', function(e) {
+            bgmVolume = e.target.value;
+            updateBGMVolume();
+        });
+
+        document.getElementById('sfxVolume').addEventListener('input', function(e) {
+            sfxVolume = e.target.value;
+        });
+
+        // ESC key handler
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal('settingsModal');
+                closeModal('helpModal');
+                closeModal('shopModal');
+            }
+        });
+    </script>
+</body>
+</html>
