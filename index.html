@@ -678,10 +678,10 @@
      ***************************************************************/
     const GAME_WIDTH = 800;
     const GAME_HEIGHT = 600;
-    const PLAYER_SIZE = 48;
-    const PLATE_SIZE = 90;
-    const BOWL_SIZE = 85;
-    const CUP_SIZE = 60;
+    const PLAYER_SIZE = 48; 
+    const PLATE_SIZE = 120;
+    const BOWL_SIZE  = 120;
+    const CUP_SIZE   = 60;
     let MAX_DISHES_PER_TYPE = 5;
     const DISH_REMOVAL_INTERVAL = 5000;
     const MIN_DISHES_BEFORE_REMOVAL = 3;
@@ -747,9 +747,8 @@
     function updateWashingProgress(deltaMs) {
         if (game.player.isWashing) {
             washingProgressElement.style.display = 'block';
-            // Make washing speed time-based:
-            // e.g., 10 units/second times player.washingSpeed
-            const washRate = 10 * game.player.washingSpeed * (deltaMs / 1000);
+            // FASTER washing: changed from 10 to 20
+            const washRate = 20 * game.player.washingSpeed * (deltaMs / 1000);
             washingProgress += washRate;
 
             progressBar.style.width = `${(washingProgress / 100) * 100}%`;
@@ -770,7 +769,6 @@
     }
 
     function updatePrompt() {
-        // approximate bounding for collision
         const rectPlayer = {
             x: game.player.x,
             y: game.player.y,
@@ -931,15 +929,23 @@
                 game.zones.shelf.width,
                 game.zones.shelf.height
             );
+
+            // Larger on shelf for plate/bowl
             Object.entries(game.storedDishes).forEach(([type, count]) => {
                 if (count > 0) {
                     const zone = game.zones.shelf.zones[type];
                     const image = images['clean'+type.charAt(0).toUpperCase()+type.slice(1)];
                     if (image.complete) {
-                        ctx.drawImage(image, zone.x, zone.y, 40, 40);
+                        let shelfDrawSize = 40; 
+                        if (type === 'plate' || type === 'bowl') {
+                            shelfDrawSize = 60; // bigger for plate/bowl
+                        }
+                        // Cup stays 40 if you like
+                        ctx.drawImage(image, zone.x, zone.y, shelfDrawSize, shelfDrawSize);
+                        
                         ctx.fillStyle = '#000';
                         ctx.font = '14px Mega';
-                        ctx.fillText(`x${count}`, zone.x + 45, zone.y + 25);
+                        ctx.fillText(`x${count}`, zone.x + shelfDrawSize + 5, zone.y + shelfDrawSize/2);
                     }
                 }
             });
@@ -951,7 +957,6 @@
 
         /************************************************************
          * Draw Held Item (if any) above the player sprite
-         * SHIFTED further to the right: +60 (instead of +40)
          ************************************************************/
         if (game.player.heldItem) {
             const prefix = game.player.heldItem.state === 'clean' ? 'clean' : 'dirty';
@@ -959,17 +964,19 @@
             const itemKey = prefix + capitalType; 
             const itemImg = images[itemKey];
             if (itemImg && itemImg.complete) {
-                let itemSize = 80;  // default
+                let itemSize = 80;  
                 if (game.player.heldItem.type === 'plate') itemSize = PLATE_SIZE;
                 if (game.player.heldItem.type === 'bowl')  itemSize = BOWL_SIZE;
                 if (game.player.heldItem.type === 'cup')   itemSize = CUP_SIZE;
 
-                // SHIFT to x+60 (instead of x+40)
-                const drawX = game.player.x + 60; // <-- CHANGED
+                // SHIFT to x+60 so it's not inside the sprite
+                const drawX = game.player.x + 60;
                 const drawY = game.player.y - 10 + floatOffset; 
 
-                const scaledW = itemSize * 0.5;
-                const scaledH = itemSize * 0.5;
+                // Make items bigger in the player's hand (0.7 instead of 0.5)
+                const scale = 0.7; 
+                const scaledW = itemSize * scale;
+                const scaledH = itemSize * scale;
                 
                 ctx.drawImage(itemImg, drawX, drawY, scaledW, scaledH);
             }
@@ -1021,7 +1028,7 @@
         document.getElementById('pauseOverlay').style.display = 'none';
         document.getElementById('gameContainer').style.display = 'none';
         document.getElementById('inGameMenu').style.display = 'none';
-        document.getElementById('mobileControls').style.display = 'none'; // Hide mobile UI
+        document.getElementById('mobileControls').style.display = 'none'; 
         document.getElementById('mainMenu').style.display = 'flex';
 
         bgMusic.pause();
@@ -1052,7 +1059,6 @@
     function closeModal(modalId) {
         document.getElementById(modalId).style.display = 'none';
         document.getElementById('modalOverlay').style.display = 'none';
-        // Resume if not paused for other reasons
         if (gameStarted && gamePaused && document.getElementById('pauseOverlay').style.display !== 'flex') {
             resumeGame();
         }
@@ -1111,7 +1117,6 @@
     /***************************************************************
      * MOBILE CONTROLS (TOUCH-BASED JOYSTICK + INTERACT BUTTON)
      ***************************************************************/
-    // Basic virtual joystick logic:
     const joystickContainer = document.getElementById('joystickContainer');
     const joystickHandle = document.getElementById('joystickHandle');
 
@@ -1133,8 +1138,7 @@
         const touch = e.changedTouches[0];
         const dx = touch.pageX - joystickStartX;
         const dy = touch.pageY - joystickStartY;
-        // Constrain handle within radius
-        const radius = 60; // half of container radius
+        const radius = 60; 
         const dist = Math.sqrt(dx*dx + dy*dy);
         let angle = Math.atan2(dy, dx);
 
@@ -1145,18 +1149,13 @@
         joystickHandle.style.left = (handleX - 20) + 'px';
         joystickHandle.style.top = (handleY - 20) + 'px';
 
-        // Convert angle+dist to game.keys
-        // We'll consider a "dead zone" to avoid jitter
         const deadZone = 10;
         if (dist > deadZone) {
-            // Up/Down
             game.keys.up = (Math.abs(dy) > Math.abs(dx) && dy < 0);
             game.keys.down = (Math.abs(dy) > Math.abs(dx) && dy > 0);
-            // Left/Right
             game.keys.left = (Math.abs(dx) > Math.abs(dy) && dx < 0);
             game.keys.right = (Math.abs(dx) > Math.abs(dy) && dx > 0);
         } else {
-            // Center
             game.keys.up = false;
             game.keys.down = false;
             game.keys.left = false;
@@ -1168,7 +1167,6 @@
         joystickActive = false;
         joystickHandle.style.left = 'calc(50% - 20px)';
         joystickHandle.style.top = 'calc(50% - 20px)';
-        // Reset keys
         game.keys.up = false;
         game.keys.down = false;
         game.keys.left = false;
@@ -1179,13 +1177,11 @@
     const interactButton = document.getElementById('interactButton');
     interactButton.addEventListener('touchstart', (e) => {
         e.preventDefault();
-        // Simulate "E" press
         game.keys.e = true;
         if (!game.player.isWashing) {
             handleInteraction();
         }
     });
-    // Releasing means we stop washing
     interactButton.addEventListener('touchend', (e) => {
         game.keys.e = false;
         game.player.isWashing = false;
