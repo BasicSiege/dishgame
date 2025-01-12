@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Dishwashing Joys</title>
+    <title>Dishwashing Joys (Sprite Integrated)</title>
+    <!-- 8-bit style font -->
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
         @font-face {
             font-family: 'Mega';
@@ -13,6 +15,8 @@
             padding: 0;
             font-family: 'Mega', sans-serif;
             background: #1a1a1a;
+            /* Prevent double-tap zoom on iOS Safari */
+            touch-action: manipulation; /* <-- Helps with mobile touches */
         }
 
         #mainMenu {
@@ -30,12 +34,27 @@
         #gameContainer {
             display: none;
             width: 800px;
+            height: 600px;
             margin: 20px auto;
             position: relative;
+            background: black; /* So we can see the boundary clearly */
+            overflow: hidden;  /* <-- Ensures content doesn't bleed out */
         }
 
         canvas {
             border: 2px solid black;
+            touch-action: none; /* We'll handle touches ourselves */
+        }
+
+        #player {
+            position: absolute;
+            width: 70px;
+            height: 100px;
+            will-change: transform;
+            background-repeat: no-repeat;
+            background-size: contain;
+            image-rendering: pixelated;
+            pointer-events: none; /* So clicks pass through */
         }
 
         #scoreDisplay {
@@ -105,7 +124,6 @@
             width: 200px;
             text-align: center;
         }
-
         .menu-button:hover {
             transform: scale(1.1);
             background: #27ae60;
@@ -117,25 +135,25 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: white;
+            background: #333;
             padding: 20px;
             border-radius: 10px;
             z-index: 1000;
             width: 400px;
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            border: 4px solid #fff;
+            font-family: 'Press Start 2P', sans-serif;
+            color: #fff;
         }
-
         .modal-title {
-            font-size: 24px;
+            font-size: 18px;
             margin-bottom: 20px;
             text-align: center;
-            color: #2c3e50;
+            color: #0ff;
         }
-
         .modal-content {
             margin-bottom: 20px;
         }
-
         .close-button {
             position: absolute;
             top: 10px;
@@ -144,26 +162,17 @@
             cursor: pointer;
             color: #7f8c8d;
         }
-
-        .settings-control {
-            display: flex;
-            align-items: center;
-            margin: 10px 0;
-            justify-content: space-between;
-        }
-
         .shop-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 10px;
-            border: 1px solid #ddd;
+            border: 2px dotted #ccc;
             margin: 5px 0;
             border-radius: 5px;
         }
-
         .shop-item button {
-            font-family: 'Mega', sans-serif;
+            font-family: 'Press Start 2P', sans-serif;
             padding: 5px 15px;
             background: #3498db;
             color: white;
@@ -171,12 +180,17 @@
             border-radius: 5px;
             cursor: pointer;
         }
-
         .shop-item button:disabled {
             background: #bdc3c7;
             cursor: not-allowed;
         }
-
+        .settings-control {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            justify-content: space-between;
+            font-size: 14px;
+        }
         .modal-overlay {
             display: none;
             position: fixed;
@@ -193,6 +207,7 @@
             top: 10px;
             right: 10px;
             z-index: 90;
+            display: none;
         }
 
         .in-game-button {
@@ -207,7 +222,6 @@
             cursor: pointer;
             transition: transform 0.2s, background 0.2s;
         }
-
         .in-game-button:hover {
             transform: scale(1.1);
             background: #27ae60;
@@ -222,34 +236,29 @@
             height: 100%;
             background: rgba(0, 0, 0, 0.7);
             z-index: 95;
-            display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
         }
-
         .pause-menu {
-            background: rgba(44, 62, 80, 0.95);
-            padding: 30px;
-            border-radius: 15px;
+            background: #333;
+            padding: 20px;
+            border-radius: 10px;
             text-align: center;
-            min-width: 300px;
-            display: flex; /* Add flexbox */
-            flex-direction: column; /* Stack items vertically */
-            align-items: center; /* Center children horizontally */
+            width: 380px;
+            border: 4px solid #fff;
+            font-family: 'Press Start 2P', sans-serif;
+            color: #fff;
         }
-
         .pause-title {
-            color: white;
-            font-size: 36px;
-            margin-bottom: 30px;
-            font-family: 'Mega', sans-serif;
+            color: #0ff;
+            font-size: 18px;
+            margin-bottom: 20px;
         }
-
         .pause-button {
-            font-family: 'Mega', sans-serif;
-            font-size: 24px;
-            padding: 15px 40px;
+            font-family: 'Press Start 2P', sans-serif;
+            font-size: 14px;
+            padding: 10px 30px;
             margin: 10px;
             border: none;
             border-radius: 8px;
@@ -257,24 +266,82 @@
             color: white;
             cursor: pointer;
             transition: transform 0.2s, background 0.2s;
-            width: 200px;
             text-align: center;
-            /* Removed unnecessary display: flex */
         }
-
         .pause-button:hover {
             transform: scale(1.1);
             background: #27ae60;
         }
 
+        /* Floating animation for main menu title */
         @keyframes float {
             0% { transform: translateY(0px); }
             50% { transform: translateY(-20px); }
             100% { transform: translateY(0px); }
         }
+
+        /* ---- MOBILE CONTROLS (ADDED) ---- */
+        #mobileControls {
+            display: none; /* Shown only in-game on mobile or small screens */
+            position: fixed;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            z-index: 99;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        /* Virtual Joystick Container */
+        #joystickContainer {
+            width: 150px;
+            height: 150px;
+            border: 2px dashed #fff;
+            border-radius: 50%;
+            position: relative;
+            margin-right: 20px;
+            touch-action: none;
+        }
+        #joystickHandle {
+            width: 40px;
+            height: 40px;
+            background: #fff;
+            border: 2px solid #555;
+            border-radius: 50%;
+            position: absolute;
+            top: calc(50% - 20px);
+            left: calc(50% - 20px);
+        }
+        /* Interact button */
+        #interactButton {
+            font-family: 'Press Start 2P', sans-serif;
+            font-size: 14px;
+            padding: 20px 30px;
+            background: #2ecc71;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            flex: 1;
+            margin-left: 20px;
+        }
+        #interactButton:active {
+            background: #27ae60;
+        }
+        /* Wrap joystick + button */
+        .controls-wrap {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        @media (max-width: 1024px) {
+            #mobileControls {
+                display: flex;
+            }
+        }
     </style>
 </head>
 <body>
+    <!-- Main Menu -->
     <div id="mainMenu">
         <h1 class="menu-title">Dishwashing Joys</h1>
         <button class="menu-button" onclick="startGame()">Play</button>
@@ -283,44 +350,49 @@
         <button class="menu-button" onclick="openHelp()">Help</button>
     </div>
 
-    <div id="inGameMenu" style="display: none;">
+    <!-- In-Game UI -->
+    <div id="inGameMenu">
         <button class="in-game-button" onclick="openShop()">Shop</button>
         <button class="in-game-button" onclick="pauseGame()">Pause</button>
     </div>
 
-    <div id="pauseOverlay" style="display: none;">
+    <!-- Pause Overlay -->
+    <div id="pauseOverlay">
         <div class="pause-menu">
-            <h2 class="pause-title">PAUSED</h2>
+            <h2 class="pause-title">GAME PAUSED</h2>
             <button class="pause-button" onclick="resumeGame()">Resume</button>
             <button class="pause-button" onclick="openSettings()">Settings</button>
             <button class="pause-button" onclick="returnToMainMenu()">Main Menu</button>
         </div>
     </div>
 
+    <!-- Dark overlay for modals -->
     <div class="modal-overlay" id="modalOverlay"></div>
 
+    <!-- Settings Modal (8-bit style) -->
     <div id="settingsModal" class="modal">
         <span class="close-button" onclick="closeModal('settingsModal')">&times;</span>
-        <h2 class="modal-title">Settings</h2>
+        <h2 class="modal-title">GAME SETTINGS</h2>
         <div class="modal-content">
             <div class="settings-control">
-                <label>Background Music Volume:</label>
+                <label>BG Music Volume:</label>
                 <input type="range" min="0" max="100" value="50" id="bgmVolume">
             </div>
             <div class="settings-control">
-                <label>Sound Effects Volume:</label>
+                <label>SFX Volume:</label>
                 <input type="range" min="0" max="100" value="50" id="sfxVolume">
             </div>
         </div>
     </div>
 
+    <!-- Help Modal -->
     <div id="helpModal" class="modal">
         <span class="close-button" onclick="closeModal('helpModal')">&times;</span>
-        <h2 class="modal-title">How to Play</h2>
+        <h2 class="modal-title">HOW TO PLAY</h2>
         <div class="modal-content">
             <p>Controls:</p>
             <ul>
-                <li>user WASD or Arrow Keys to move</li>
+                <li>Use WASD or Arrow Keys to move</li>
                 <li>"E" to pick up Dirty Dishes</li>
                 <li>Hold "E" to wash Dishes</li>
                 <li>"E" to put away dishes</li>
@@ -340,9 +412,10 @@
         </div>
     </div>
 
+    <!-- Shop Modal -->
     <div id="shopModal" class="modal">
         <span class="close-button" onclick="closeModal('shopModal')">&times;</span>
-        <h2 class="modal-title">Upgrade Shop</h2>
+        <h2 class="modal-title">UPGRADE SHOP</h2>
         <div class="modal-content">
             <div class="shop-item">
                 <div>
@@ -368,500 +441,755 @@
         </div>
     </div>
 
+    <!-- Game Container -->
     <div id="gameContainer">
         <canvas id="gameCanvas" width="800" height="600"></canvas>
+
         <div id="scoreDisplay">Score: 0</div>
         <div id="promptText"></div>
         <div id="washingProgress">
             <div id="progressBar"></div>
         </div>
+
+        <!-- PLAYER SPRITE -->
+        <div id="player"></div>
+    </div>
+
+    <!-- MOBILE CONTROLS (ADDED) -->
+    <div id="mobileControls">
+        <div class="controls-wrap">
+            <div id="joystickContainer">
+                <div id="joystickHandle"></div>
+            </div>
+            <button id="interactButton">Interact</button>
+        </div>
     </div>
 
     <script>
-        const GAME_WIDTH = 800;
-        const GAME_HEIGHT = 600;
-        const PLAYER_SIZE = 48;
-        const PLATE_SIZE = 90;
-        const BOWL_SIZE = 85;
-        const CUP_SIZE = 60;
-        let MAX_DISHES_PER_TYPE = 5;
-        const DISH_REMOVAL_INTERVAL = 5000;
-        const MIN_DISHES_BEFORE_REMOVAL = 3;
+    /***************************************************************
+     * SPRITE-BASED PLAYER CLASS 
+     ***************************************************************/
+    class SpritePlayer {
+        constructor() {
+            this.element = document.getElementById('player');
+            this.x = 400;
+            this.y = 300;
+            this.pixelPerSecond = 180;
+            this.washingSpeed = 1;
+            this.score = 0;
+            this.heldItem = null;
+            this.isWashing = false;
 
-        // Modified sink dimensions
-        const SINK_WIDTH = 80;
-        const SINK_HEIGHT = 120;
+            // Animation
+            this.direction = 'SOUTH';
+            this.currentFrame = 0;
+            this.frameTime = 0;
+            this.frameDuration = 0.1;
+            this.isMoving = false;
 
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        const scoreDisplay = document.getElementById('scoreDisplay');
-        const promptText = document.getElementById('promptText');
-
-        // Audio setup
-        const bgMusic = new Audio('music.mp3');
-        bgMusic.loop = true;
-        let bgmVolume = 50;
-        let sfxVolume = 50;
-
-        // Game state
-        let gameStarted = false;
-        const game = {
-            player: {
-                x: GAME_WIDTH / 2,
-                y: GAME_HEIGHT / 2,
-                speed: 3,
-                washingSpeed: 1,
-                score: 0,
-                heldItem: null,
-                isWashing: false
-            },
-            storedDishes: {
-                plate: 0,
-                bowl: 0,
-                cup: 0
-            },
-            lastDishRemoval: {
-                plate: Date.now(),
-                bowl: Date.now(),
-                cup: Date.now()
-            },
-            keys: {
-                up: false,
-                down: false,
-                left: false,
-                right: false,
-                e: false
-            },
-            zones: {
-                dishSpawn: { x: 550, y: 80, width: 64, height: 64 },
-                sink: { x: GAME_WIDTH - 700, y: 100, width: SINK_WIDTH, height: SINK_HEIGHT },
-                shelf: {
-                    x: GAME_WIDTH - 200,
-                    y: GAME_HEIGHT - 300,
-                    width: 150,
-                    height: 250,
-                    zones: {
-                        bowl: { x: GAME_WIDTH - 180, y: GAME_HEIGHT - 280, width: 110, height: 64 },
-                        plate: { x: GAME_WIDTH - 180, y: GAME_HEIGHT - 200, width: 110, height: 64 },
-                        cup: { x: GAME_WIDTH - 180, y: GAME_HEIGHT - 120, width: 110, height: 64 }
-                    }
-                }
-            }
-        };
-
-        const images = {};
-        ['dirtyPlate', 'cleanPlate', 'dirtyBowl', 'cleanBowl', 'dirtyCup', 'cleanCup', 'shelf', 'sink', 'bustub'].forEach(name => {
-            images[name] = new Image();
-            images[name].src = `art/${name.toLowerCase()}.png`;
-        });
-
-        // Washing progress
-        let washingProgress = 0;
-        const progressBar = document.getElementById('progressBar');
-        const washingProgressElement = document.getElementById('washingProgress');
-
-        let imagesLoaded = 0;
-        Object.values(images).forEach(img => {
-            img.onload = () => {
-                imagesLoaded++;
-                if (imagesLoaded === Object.keys(images).length) {
-                    console.log('All images loaded');
+            // 8-direction frames
+            this.frames = {
+                'NORTH': {
+                    walking: [
+                        'sprite/NORTHFRAME1.png','sprite/NORTHFRAME2.png',
+                        'sprite/NORTHFRAME3.png','sprite/NORTHFRAME4.png',
+                        'sprite/NORTHFRAME5.png','sprite/NORTHFRAME6.png',
+                        'sprite/NORTHFRAME7.png','sprite/NORTHFRAME8.png'
+                    ],
+                    standing: ['sprite/STANDING-NORTH-FRAME.png']
+                },
+                'SOUTH': {
+                    walking: [
+                        'sprite/SOUTHFRAME1.png','sprite/SOUTHFRAME2.png',
+                        'sprite/SOUTHFRAME3.png','sprite/SOUTHFRAME4.png',
+                        'sprite/SOUTHFRAME5.png','sprite/SOUTHFRAME6.png',
+                        'sprite/SOUTHFRAME7.png','sprite/SOUTHFRAME8.png'
+                    ],
+                    standing: ['sprite/STANDING-SOUTH-FRAME.png']
+                },
+                'EAST': {
+                    walking: [
+                        'sprite/EASTFRAME1.png','sprite/EASTFRAME2.png',
+                        'sprite/EASTFRAME3.png','sprite/EASTFRAME4.png',
+                        'sprite/EASTFRAME5.png','sprite/EASTFRAME6.png',
+                        'sprite/EASTFRAME7.png','sprite/EASTFRAME8.png'
+                    ],
+                    standing: ['sprite/STANDING-EAST-FRAME.png']
+                },
+                'WEST': {
+                    walking: [
+                        'sprite/WESTFRAME1.png','sprite/WESTFRAME2.png',
+                        'sprite/WESTFRAME3.png','sprite/WESTFRAME4.png',
+                        'sprite/WESTFRAME5.png','sprite/WESTFRAME6.png',
+                        'sprite/WESTFRAME7.png','sprite/WESTFRAME8.png'
+                    ],
+                    standing: ['sprite/STANDING-WEST-FRAME.png']
+                },
+                'NORTH-EAST': {
+                    walking: [
+                        'sprite/NORTH-EAST-FRAME1.png','sprite/NORTH-EAST-FRAME2.png',
+                        'sprite/NORTH-EAST-FRAME3.png','sprite/NORTH-EAST-FRAME4.png',
+                        'sprite/NORTH-EAST-FRAME5.png','sprite/NORTH-EAST-FRAME6.png',
+                        'sprite/NORTH-EAST-FRAME7.png','sprite/NORTH-EAST-FRAME8.png'
+                    ],
+                    standing: ['sprite/STANDING-NORTH-EAST-FRAME.png']
+                },
+                'NORTH-WEST': {
+                    walking: [
+                        'sprite/NORTH-WEST-FRAME1.png','sprite/NORTH-WEST-FRAME2.png',
+                        'sprite/NORTH-WEST-FRAME3.png','sprite/NORTH-WEST-FRAME4.png',
+                        'sprite/NORTH-WEST-FRAME5.png','sprite/NORTH-WEST-FRAME6.png',
+                        'sprite/NORTH-WEST-FRAME7.png','sprite/NORTH-WEST-FRAME8.png'
+                    ],
+                    standing: ['sprite/STANDING-NORTH-WEST-FRAME.png']
+                },
+                'SOUTH-EAST': {
+                    walking: [
+                        'sprite/SOUTH-EAST-FRAME1.png','sprite/SOUTH-EAST-FRAME2.png',
+                        'sprite/SOUTH-EAST-FRAME3.png','sprite/SOUTH-EAST-FRAME4.png',
+                        'sprite/SOUTH-EAST-FRAME5.png','sprite/SOUTH-EAST-FRAME6.png',
+                        'sprite/SOUTH-EAST-FRAME7.png','sprite/SOUTH-EAST-FRAME8.png'
+                    ],
+                    standing: ['sprite/STANDING-SOUTH-EAST-FRAME.png']
+                },
+                'SOUTH-WEST': {
+                    walking: [
+                        'sprite/SOUTH-WEST-FRAME1.png','sprite/SOUTH-WEST-FRAME2.png',
+                        'sprite/SOUTH-WEST-FRAME3.png','sprite/SOUTH-WEST-FRAME4.png',
+                        'sprite/SOUTH-WEST-FRAME5.png','sprite/SOUTH-WEST-FRAME6.png',
+                        'sprite/SOUTH-WEST-FRAME7.png','sprite/SOUTH-WEST-FRAME8.png'
+                    ],
+                    standing: ['sprite/STANDING-SOUTH-WEST-FRAME.png']
+                },
+                'STANDING': {
+                    walking: [],
+                    standing: ['sprite/STANDING-SOUTH-FRAME.png']
                 }
             };
-            img.onerror = (e) => {
-                console.error('Failed to load image:', e.target.src);
-                imagesLoaded++;
-                if (imagesLoaded === Object.keys(images).length) {
-                    console.log('All images loaded (some with errors)');
-                }
-            };
-        });
 
-        function updateWashingProgress() {
-            if (game.player.isWashing) {
-                washingProgressElement.style.display = 'block';
-                washingProgress += game.player.washingSpeed;
-                progressBar.style.width = `${(washingProgress / 100) * 100}%`;
-                
-                if (washingProgress >= 100) {
-                    game.player.heldItem.state = 'clean';
-                    game.player.score += 10 * game.player.washingSpeed;
-                    updateScore();
-                    game.player.isWashing = false;
-                    washingProgress = 0;
-                    washingProgressElement.style.display = 'none';
-                }
-            } else {
-                washingProgress = 0;
-                progressBar.style.width = '0%';
-                washingProgressElement.style.display = 'none';
-            }
+            this.loadedFrames = {};
+            this.preloadImages().catch(() => {
+                console.warn("Some frames failed to load.");
+            });
         }
 
-        function updatePrompt() {
-            if (game.player.heldItem) {
-                if (game.player.heldItem.state === 'dirty' && checkCollision(game.player, game.zones.sink)) {
-                    promptText.textContent = 'Hold "E" to wash Dishes';
-                } else if (game.player.heldItem.state === 'clean') {
-                    promptText.textContent = '"E" to put away dishes';
+        preloadImages() {
+            const allDirs = Object.keys(this.frames);
+            let allUrls = [];
+            for (let dir of allDirs) {
+                allUrls.push(...this.frames[dir].walking, ...this.frames[dir].standing);
+            }
+            allUrls = [...new Set(allUrls)];
+
+            const promises = allUrls.map(url => new Promise((resolve) => {
+                const img = new Image();
+                img.onload = () => {
+                    this.loadedFrames[url] = img;
+                    resolve();
+                };
+                img.onerror = () => resolve();
+                img.src = url;
+            }));
+
+            return Promise.all(promises);
+        }
+
+        getWalkingFrames(dir) {
+            return (this.frames[dir] || this.frames['SOUTH']).walking;
+        }
+        getStandingFrame(dir) {
+            return (this.frames[dir] || this.frames['SOUTH']).standing[0];
+        }
+
+        computeDirection() {
+            const w = game.keys.up;
+            const s = game.keys.down;
+            const a = game.keys.left;
+            const d = game.keys.right;
+
+            if (!w && !s && !a && !d) return this.direction;
+
+            if (w && d) return 'NORTH-EAST';
+            if (w && a) return 'NORTH-WEST';
+            if (s && d) return 'SOUTH-EAST';
+            if (s && a) return 'SOUTH-WEST';
+            if (w) return 'NORTH';
+            if (s) return 'SOUTH';
+            if (a) return 'WEST';
+            if (d) return 'EAST';
+            return 'SOUTH';
+        }
+
+        update(deltaMs) {
+            // Movement (pixelPerSecond)
+            const moveAmt = this.pixelPerSecond * (deltaMs / 1000);
+            let dx = 0, dy = 0;
+            if (game.keys.up)    dy -= moveAmt;
+            if (game.keys.down)  dy += moveAmt;
+            if (game.keys.left)  dx -= moveAmt;
+            if (game.keys.right) dx += moveAmt;
+
+            this.isMoving = (dx !== 0 || dy !== 0);
+
+            // Direction
+            if (this.isMoving) {
+                const newDir = this.computeDirection();
+                if (newDir !== this.direction) {
+                    this.direction = newDir;
+                    this.currentFrame = 0;
+                    this.frameTime = 0;
                 }
-            } else if (checkCollision(game.player, game.zones.dishSpawn)) {
-                promptText.textContent = '"E" to pick up Dirty Dishes';
+            }
+
+            // Update position
+            this.x += dx;
+            this.y += dy;
+            this.x = Math.max(0, Math.min(800 - 70, this.x));
+            this.y = Math.max(0, Math.min(600 - 100, this.y));
+
+            // Animate
+            if (this.isMoving) {
+                const framesArr = this.getWalkingFrames(this.direction);
+                if (framesArr.length) {
+                    this.frameTime += (deltaMs / 1000);
+                    if (this.frameTime >= this.frameDuration) {
+                        this.currentFrame = (this.currentFrame + 1) % framesArr.length;
+                        this.frameTime = 0;
+                    }
+                    this.element.style.backgroundImage = `url('${framesArr[this.currentFrame]}')`;
+                } else {
+                    this.element.style.backgroundImage = `url('${this.getStandingFrame(this.direction)}')`;
+                }
+            } else {
+                // Standing
+                this.element.style.backgroundImage = `url('${this.getStandingFrame(this.direction)}')`;
+                this.currentFrame = 0;
+                this.frameTime = 0;
+            }
+
+            // Apply position
+            this.element.style.left = `${this.x}px`;
+            this.element.style.top = `${this.y}px`;
+        }
+    }
+
+    /***************************************************************
+     * MAIN DISHWASHING GAME LOGIC
+     ***************************************************************/
+    const GAME_WIDTH = 800;
+    const GAME_HEIGHT = 600;
+    const PLAYER_SIZE = 48;
+    const PLATE_SIZE = 90;
+    const BOWL_SIZE = 85;
+    const CUP_SIZE = 60;
+    let MAX_DISHES_PER_TYPE = 5;
+    const DISH_REMOVAL_INTERVAL = 5000;
+    const MIN_DISHES_BEFORE_REMOVAL = 3;
+
+    const SINK_WIDTH = 80;
+    const SINK_HEIGHT = 120;
+
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const scoreDisplay = document.getElementById('scoreDisplay');
+    const promptText = document.getElementById('promptText');
+
+    // Audio
+    const bgMusic = new Audio('music.mp3');
+    bgMusic.loop = true;
+    let bgmVolume = 50;
+    let sfxVolume = 50;
+
+    let gameStarted = false;
+    const game = {
+        player: null,
+        storedDishes: {
+            plate: 0,
+            bowl: 0,
+            cup: 0
+        },
+        lastDishRemoval: {
+            plate: Date.now(),
+            bowl: Date.now(),
+            cup: Date.now()
+        },
+        keys: { up:false, down:false, left:false, right:false, e:false },
+        zones: {
+            dishSpawn: { x: 550, y: 80, width: 64, height: 64 },
+            sink: { x: GAME_WIDTH - 700, y: 100, width: SINK_WIDTH, height: SINK_HEIGHT },
+            shelf: {
+                x: GAME_WIDTH - 200,
+                y: GAME_HEIGHT - 300,
+                width: 150,
+                height: 250,
+                zones: {
+                    bowl:  { x: GAME_WIDTH - 180, y: GAME_HEIGHT - 280, width: 110, height: 64 },
+                    plate: { x: GAME_WIDTH - 180, y: GAME_HEIGHT - 200, width: 110, height: 64 },
+                    cup:   { x: GAME_WIDTH - 180, y: GAME_HEIGHT - 120, width: 110, height: 64 }
+                }
+            }
+        }
+    };
+
+    const images = {};
+    [
+        'dirtyPlate','cleanPlate','dirtyBowl','cleanBowl',
+        'dirtyCup','cleanCup','shelf','sink','bustub'
+    ].forEach(name => {
+        images[name] = new Image();
+        images[name].src = `art/${name}.png`;
+    });
+
+    let washingProgress = 0;
+    const progressBar = document.getElementById('progressBar');
+    const washingProgressElement = document.getElementById('washingProgress');
+
+    function updateWashingProgress(deltaMs) {
+        if (game.player.isWashing) {
+            washingProgressElement.style.display = 'block';
+            // Make washing speed time-based:
+            // e.g., 10 units/second times player.washingSpeed
+            const washRate = 10 * game.player.washingSpeed * (deltaMs / 1000);
+            washingProgress += washRate;
+
+            progressBar.style.width = `${(washingProgress / 100) * 100}%`;
+
+            if (washingProgress >= 100) {
+                game.player.heldItem.state = 'clean';
+                game.player.score += 10 * game.player.washingSpeed;
+                updateScore();
+                game.player.isWashing = false;
+                washingProgress = 0;
+                washingProgressElement.style.display = 'none';
+            }
+        } else {
+            washingProgress = 0;
+            progressBar.style.width = '0%';
+            washingProgressElement.style.display = 'none';
+        }
+    }
+
+    function updatePrompt() {
+        // approximate bounding for collision
+        const rectPlayer = {
+            x: game.player.x,
+            y: game.player.y,
+            width: PLAYER_SIZE,
+            height: PLAYER_SIZE
+        };
+
+        if (game.player.heldItem) {
+            if (game.player.heldItem.state === 'dirty' && checkCollision(rectPlayer, game.zones.sink)) {
+                promptText.textContent = 'Hold "E" or Interact to wash Dishes';
+            } else if (game.player.heldItem.state === 'clean') {
+                promptText.textContent = 'Press "E" or Interact to put away dishes';
             } else {
                 promptText.textContent = '';
             }
+        } else if (checkCollision(rectPlayer, game.zones.dishSpawn)) {
+            promptText.textContent = '"E" or Interact to pick up Dirty Dishes';
+        } else {
+            promptText.textContent = '';
         }
+    }
 
-        function handleInteraction() {
-            if (!game.player.heldItem) {
-                if (checkCollision(game.player, game.zones.dishSpawn)) {
-                    game.player.heldItem = {
-                        type: ['plate', 'bowl', 'cup'][Math.floor(Math.random() * 3)],
-                        state: 'dirty'
-                    };
-                }
-            } else if (game.player.heldItem.state === 'dirty') {
-                if (checkCollision(game.player, game.zones.sink) && game.keys.e) {
-                    game.player.isWashing = true;
-                }
-            } else if (game.player.heldItem.state === 'clean') {
-                const shelfZone = game.zones.shelf.zones[game.player.heldItem.type];
-                if (checkCollision(game.player, shelfZone) && 
-                    game.storedDishes[game.player.heldItem.type] < MAX_DISHES_PER_TYPE) {
-                    game.storedDishes[game.player.heldItem.type]++;
-                    game.player.heldItem = null;
-                    game.player.score += 5;
-                    updateScore();
-                }
+    function handleInteraction() {
+        const rectPlayer = {
+            x: game.player.x,
+            y: game.player.y,
+            width: PLAYER_SIZE,
+            height: PLAYER_SIZE
+        };
+
+        // Not holding => pick up dish
+        if (!game.player.heldItem) {
+            if (checkCollision(rectPlayer, game.zones.dishSpawn)) {
+                game.player.heldItem = {
+                    type: ['plate','bowl','cup'][Math.floor(Math.random()*3)],
+                    state: 'dirty'
+                };
             }
         }
-
-        function checkCollision(obj1, obj2) {
-            return obj1.x < obj2.x + obj2.width &&
-                   obj1.x + PLAYER_SIZE > obj2.x &&
-                   obj1.y < obj2.y + obj2.height &&
-                   obj1.y + PLAYER_SIZE > obj2.y;
+        // If holding dirty => wash if at sink
+        else if (game.player.heldItem.state === 'dirty') {
+            if (checkCollision(rectPlayer, game.zones.sink)) {
+                game.player.isWashing = true;
+            }
         }
-
-        function checkCollision(obj1, obj2) {
-            return obj1.x < obj2.x + obj2.width &&
-                   obj1.x + PLAYER_SIZE > obj2.x &&
-                   obj1.y < obj2.y + obj2.height &&
-                   obj1.y + PLAYER_SIZE > obj2.y;
-        }
-
-        function updateScore() {
-            scoreDisplay.textContent = 'Score: ' + Math.floor(game.player.score);
-        }
-
-        function purchaseSpeedUpgrade() {
-            if (game.player.score >= 100) {
-                game.player.speed *= 1.2;
-                game.player.score -= 100;
+        // If holding clean => store on shelf
+        else if (game.player.heldItem.state === 'clean') {
+            const shelfZone = game.zones.shelf.zones[game.player.heldItem.type];
+            if (checkCollision(rectPlayer, shelfZone) &&
+                game.storedDishes[game.player.heldItem.type] < MAX_DISHES_PER_TYPE) {
+                game.storedDishes[game.player.heldItem.type]++;
+                game.player.heldItem = null;
+                game.player.score += 5;
                 updateScore();
-                updateShopButtons();
             }
         }
+    }
 
-        function purchaseWashingUpgrade() {
-            if (game.player.score >= 150) {
-                game.player.washingSpeed *= 1.3;
-                game.player.score -= 150;
-                updateScore();
-                updateShopButtons();
-            }
-        }
+    function checkCollision(obj1, obj2) {
+        return (
+            obj1.x < obj2.x + obj2.width &&
+            obj1.x + obj1.width > obj2.x &&
+            obj1.y < obj2.y + obj2.height &&
+            obj1.y + obj1.height > obj2.y
+        );
+    }
 
-        function purchaseStorageUpgrade() {
-            if (game.player.score >= 200) {
-                MAX_DISHES_PER_TYPE += 2;
-                game.player.score -= 200;
-                updateScore();
-                updateShopButtons();
-            }
-        }
+    function updateScore() {
+        scoreDisplay.textContent = 'Score: ' + Math.floor(game.player.score);
+    }
 
-        function update() {
-            if (game.keys.up) {
-                game.player.y = Math.max(0, game.player.y - game.player.speed);
-            }
-            if (game.keys.down) {
-                game.player.y = Math.min(GAME_HEIGHT - PLAYER_SIZE, game.player.y + game.player.speed);
-            }
-            if (game.keys.left) {
-                game.player.x = Math.max(0, game.player.x - game.player.speed);
-            }
-            if (game.keys.right) {
-                game.player.x = Math.min(GAME_WIDTH - PLAYER_SIZE, game.player.x + game.player.speed);
-            }
-
-            updatePrompt();
-            
-            if (game.player.heldItem && game.player.heldItem.state === 'dirty' && 
-                checkCollision(game.player, game.zones.sink) && game.keys.e) {
-                handleInteraction();
-            }
-        }
-
-        function draw() {
-            ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-
-            // Draw flipped sink
-            if (images.sink) {
-                ctx.save();
-                ctx.translate(game.zones.sink.x + game.zones.sink.width, game.zones.sink.y);
-                ctx.scale(-1.2, 1);
-                ctx.drawImage(images.sink, 0, 0, game.zones.sink.width, game.zones.sink.height);
-                ctx.restore();
-            }
-
-            if (images.bustub) {
-                const scaleFactor = 2.5; // Adjust this value to make the image larger or smaller
-                const newWidth = game.zones.dishSpawn.width * scaleFactor;
-                const newHeight = game.zones.dishSpawn.height * scaleFactor;
-
-                ctx.drawImage(
-                    images.bustub, 
-                    game.zones.dishSpawn.x, 
-                    game.zones.dishSpawn.y, 
-                    newWidth, 
-                    newHeight
-                );
-            }
-
-            // Draw shelf and stored dishes
-            if (images.shelf) {
-                ctx.drawImage(images.shelf, 
-                            game.zones.shelf.x, 
-                            game.zones.shelf.y, 
-                            game.zones.shelf.width, 
-                            game.zones.shelf.height);
-                
-                Object.entries(game.storedDishes).forEach(([type, count]) => {
-                    if (count > 0) {
-                        const zone = game.zones.shelf.zones[type];
-                        const image = images[`clean${type.charAt(0).toUpperCase()}${type.slice(1)}`];
-                        if (image) {
-                            ctx.drawImage(image, zone.x, zone.y, 40, 40);
-                            ctx.fillStyle = '#000';
-                            ctx.font = '14px Mega';
-                            ctx.fillText(`x${count}`, zone.x + 45, zone.y + 25);
-                        }
-                    }
-                });
-            }
-
-            // Draw player
-            ctx.fillStyle = '#4A5568';
-            ctx.fillRect(game.player.x, game.player.y, PLAYER_SIZE, PLAYER_SIZE);
-
-            // Draw held item
-            if (game.player.heldItem) {
-                const itemImage = images[
-                    (game.player.heldItem.state === 'clean' ? 'clean' : 'dirty') +
-                    game.player.heldItem.type.charAt(0).toUpperCase() +
-                    game.player.heldItem.type.slice(1)
-                ];
-                if (itemImage) {
-                    let itemSize;
-                    switch(game.player.heldItem.type) {
-                        case 'plate':
-                            itemSize = PLATE_SIZE;
-                            break;
-                        case 'bowl':
-                            itemSize = BOWL_SIZE;
-                            break;
-                        case 'cup':
-                            itemSize = CUP_SIZE;
-                            break;
-                        default:
-                            itemSize = HELD_DISH_SIZE;
-                    }
-                    ctx.drawImage(itemImage,
-                        game.player.x + PLAYER_SIZE - (itemSize/2),
-                        game.player.y - (itemSize/2),
-                        itemSize,
-                        itemSize
-                    );
-                }
-            }
-        }
-
-        function gameLoop() {
-            if (!gamePaused) {
-                update();
-                updateWashingProgress();
-                draw();
-            }
-            requestAnimationFrame(gameLoop);
-        }
-
-        function openShop() {
-            openModal('shopModal');
+    function purchaseSpeedUpgrade() {
+        if (game.player.score >= 100) {
+            game.player.pixelPerSecond *= 1.2;
+            game.player.score -= 100;
+            updateScore();
             updateShopButtons();
-            if (gameStarted) {
-                pauseGame();
+        }
+    }
+
+    function purchaseWashingUpgrade() {
+        if (game.player.score >= 150) {
+            game.player.washingSpeed *= 1.3;
+            game.player.score -= 150;
+            updateScore();
+            updateShopButtons();
+        }
+    }
+
+    function purchaseStorageUpgrade() {
+        if (game.player.score >= 200) {
+            MAX_DISHES_PER_TYPE += 2;
+            game.player.score -= 200;
+            updateScore();
+            updateShopButtons();
+        }
+    }
+
+    function removeDishes() {
+        const now = Date.now();
+        Object.keys(game.storedDishes).forEach(type => {
+            if (game.storedDishes[type] >= MIN_DISHES_BEFORE_REMOVAL &&
+                now - game.lastDishRemoval[type] > DISH_REMOVAL_INTERVAL) {
+                game.storedDishes[type]--;
+                game.lastDishRemoval[type] = now;
             }
+        });
+    }
+
+    let gamePaused = false;
+    let lastTime = performance.now();
+    function gameLoop(currentTime) {
+        if (!gamePaused) {
+            const delta = Math.min(currentTime - lastTime, 33);
+            lastTime = currentTime;
+
+            // Update sprite
+            game.player.update(delta);
+
+            // Update washing progress
+            updateWashingProgress(delta);
+
+            // Prompt
+            updatePrompt();
+
+            // Draw
+            drawScene();
+        }
+        requestAnimationFrame(gameLoop);
+    }
+
+    function drawScene() {
+        ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+        // sink
+        if (images.sink.complete) {
+            ctx.save();
+            ctx.translate(game.zones.sink.x + game.zones.sink.width, game.zones.sink.y);
+            ctx.scale(-1.2, 1);
+            ctx.drawImage(images.sink, 0, 0, game.zones.sink.width, game.zones.sink.height);
+            ctx.restore();
         }
 
-        function removeDishes() {
-            const now = Date.now();
-            Object.keys(game.storedDishes).forEach(type => {
-                if (game.storedDishes[type] >= MIN_DISHES_BEFORE_REMOVAL && 
-                    now - game.lastDishRemoval[type] > DISH_REMOVAL_INTERVAL) {
-                    game.storedDishes[type]--;
-                    game.lastDishRemoval[type] = now;
+        // bustub
+        if (images.bustub.complete) {
+            const scaleFactor = 2.5;
+            const newW = game.zones.dishSpawn.width * scaleFactor;
+            const newH = game.zones.dishSpawn.height * scaleFactor;
+            ctx.drawImage(images.bustub, game.zones.dishSpawn.x, game.zones.dishSpawn.y, newW, newH);
+        }
+
+        // shelf + stored dishes
+        if (images.shelf.complete) {
+            ctx.drawImage(
+                images.shelf,
+                game.zones.shelf.x,
+                game.zones.shelf.y,
+                game.zones.shelf.width,
+                game.zones.shelf.height
+            );
+            Object.entries(game.storedDishes).forEach(([type, count]) => {
+                if (count > 0) {
+                    const zone = game.zones.shelf.zones[type];
+                    const image = images['clean'+type.charAt(0).toUpperCase()+type.slice(1)];
+                    if (image.complete) {
+                        ctx.drawImage(image, zone.x, zone.y, 40, 40);
+                        ctx.fillStyle = '#000';
+                        ctx.font = '14px Mega';
+                        ctx.fillText(`x${count}`, zone.x + 45, zone.y + 25);
+                    }
                 }
             });
         }
 
-        // Event Listeners
-        window.addEventListener('keydown', (e) => {
-            switch(e.key.toLowerCase()) {
-                case 'w': case 'arrowup': game.keys.up = true; break;
-                case 's': case 'arrowdown': game.keys.down = true; break;
-                case 'a': case 'arrowleft': game.keys.left = true; break;
-                case 'd': case 'arrowright': game.keys.right = true; break;
-                case 'e': 
-                    game.keys.e = true;
-                    if (!game.player.isWashing) {
-                        handleInteraction();
-                    }
-                    break;
-            }
-        });
+        // Held item float
+        const timeNow = performance.now() / 300; 
+        const floatOffset = 4 * Math.sin(timeNow);
 
-        window.addEventListener('keyup', (e) => {
-            switch(e.key.toLowerCase()) {
-                case 'w': case 'arrowup': game.keys.up = false; break;
-                case 's': case 'arrowdown': game.keys.down = false; break;
-                case 'a': case 'arrowleft': game.keys.left = false; break;
-                case 'd': case 'arrowright': game.keys.right = false; break;
-                case 'e': 
-                    game.keys.e = false;
-                    game.player.isWashing = false;
-                    break;
-            }
-        });
+        /************************************************************
+         * Draw Held Item (if any) above the player sprite
+         * SHIFTED further to the right: +60 (instead of +40)
+         ************************************************************/
+        if (game.player.heldItem) {
+            const prefix = game.player.heldItem.state === 'clean' ? 'clean' : 'dirty';
+            const capitalType = game.player.heldItem.type.charAt(0).toUpperCase() + game.player.heldItem.type.slice(1);
+            const itemKey = prefix + capitalType; 
+            const itemImg = images[itemKey];
+            if (itemImg && itemImg.complete) {
+                let itemSize = 80;  // default
+                if (game.player.heldItem.type === 'plate') itemSize = PLATE_SIZE;
+                if (game.player.heldItem.type === 'bowl')  itemSize = BOWL_SIZE;
+                if (game.player.heldItem.type === 'cup')   itemSize = CUP_SIZE;
 
-        let gamePaused = false;
+                // SHIFT to x+60 (instead of x+40)
+                const drawX = game.player.x + 60; // <-- CHANGED
+                const drawY = game.player.y - 10 + floatOffset; 
 
-        function startGame() {
-            if (!gameStarted) {
-                document.getElementById('mainMenu').style.display = 'none';
-                document.getElementById('gameContainer').style.display = 'block';
-                document.getElementById('inGameMenu').style.display = 'block';
-                gameStarted = true;
-                bgMusic.play();
-                gameLoop();
-                setInterval(removeDishes, 1000);
+                const scaledW = itemSize * 0.5;
+                const scaledH = itemSize * 0.5;
+                
+                ctx.drawImage(itemImg, drawX, drawY, scaledW, scaledH);
             }
         }
+    }
 
-        function pauseGame() {
-            gamePaused = true;
-            document.getElementById('pauseOverlay').style.display = 'flex';
-            bgMusic.pause();
-        }
+    // Start/stop
+    function startGame() {
+        if (!gameStarted) {
+            document.getElementById('mainMenu').style.display = 'none';
+            document.getElementById('gameContainer').style.display = 'block';
+            document.getElementById('inGameMenu').style.display = 'block';
+            document.getElementById('mobileControls').style.display = 'flex'; // <-- Show mobile UI
 
-        function resumeGame() {
+            game.player = new SpritePlayer();
             gamePaused = false;
             document.getElementById('pauseOverlay').style.display = 'none';
+            gameStarted = true;
             bgMusic.play();
+            lastTime = performance.now();
+            requestAnimationFrame(gameLoop);
+            setInterval(removeDishes, 1000);
         }
+    }
 
-        function returnToMainMenu() {
-            // Reset game state
-            gamePaused = false;
-            gameStarted = false;
+    function pauseGame() {
+        gamePaused = true;
+        document.getElementById('pauseOverlay').style.display = 'flex';
+        bgMusic.pause();
+    }
+
+    function resumeGame() {
+        gamePaused = false;
+        document.getElementById('pauseOverlay').style.display = 'none';
+        bgMusic.play();
+    }
+
+    function returnToMainMenu() {
+        gamePaused = false;
+        gameStarted = false;
+        if (game.player) {
             game.player.score = 0;
             game.player.heldItem = null;
-            game.player.x = GAME_WIDTH / 2;
-            game.player.y = GAME_HEIGHT / 2;
-            game.storedDishes = { plate: 0, bowl: 0, cup: 0 };
-            
-            // Hide game elements
-            document.getElementById('pauseOverlay').style.display = 'none';
-            document.getElementById('gameContainer').style.display = 'none';
-            document.getElementById('inGameMenu').style.display = 'none';
-            
-            // Show main menu
-            document.getElementById('mainMenu').style.display = 'flex';
-            
-            // Stop music
-            bgMusic.pause();
-            bgMusic.currentTime = 0;
+            game.player.x = 400;
+            game.player.y = 300;
         }
+        game.storedDishes = { plate:0, bowl:0, cup:0 };
 
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                if (gameStarted) {
-                    if (gamePaused) {
-                        resumeGame();
-                    } else {
-                        pauseGame();
-                    }
+        document.getElementById('pauseOverlay').style.display = 'none';
+        document.getElementById('gameContainer').style.display = 'none';
+        document.getElementById('inGameMenu').style.display = 'none';
+        document.getElementById('mobileControls').style.display = 'none'; // Hide mobile UI
+        document.getElementById('mainMenu').style.display = 'flex';
+
+        bgMusic.pause();
+        bgMusic.currentTime = 0;
+    }
+
+    // ESC key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            if (gameStarted) {
+                if (gamePaused) {
+                    resumeGame();
+                } else {
+                    pauseGame();
                 }
-                closeModal('settingsModal');
-                closeModal('helpModal');
-                closeModal('shopModal');
             }
-        });
-
-        function openModal(modalId) {
-            document.getElementById(modalId).style.display = 'block';
-            document.getElementById('modalOverlay').style.display = 'block';
+            closeModal('settingsModal');
+            closeModal('helpModal');
+            closeModal('shopModal');
         }
+    });
 
-        function closeModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
-            document.getElementById('modalOverlay').style.display = 'none';
-            if (gameStarted && gamePaused && !document.getElementById('pauseOverlay').style.display === 'flex') {
-                resumeGame();
-            }
+    // Modals
+    function openModal(modalId) {
+        document.getElementById(modalId).style.display = 'block';
+        document.getElementById('modalOverlay').style.display = 'block';
+    }
+    function closeModal(modalId) {
+        document.getElementById(modalId).style.display = 'none';
+        document.getElementById('modalOverlay').style.display = 'none';
+        // Resume if not paused for other reasons
+        if (gameStarted && gamePaused && document.getElementById('pauseOverlay').style.display !== 'flex') {
+            resumeGame();
         }
+    }
+    function openSettings() { openModal('settingsModal'); }
+    function openHelp() { openModal('helpModal'); }
+    function openShop() {
+        openModal('shopModal');
+        updateShopButtons();
+    }
 
-        function openSettings() {
-            openModal('settingsModal');
+    function updateShopButtons() {
+        document.getElementById('speedUpgradeBtn').disabled = (game.player.score < 100);
+        document.getElementById('washingUpgradeBtn').disabled = (game.player.score < 150);
+        document.getElementById('storageUpgradeBtn').disabled = (game.player.score < 200);
+    }
+
+    // Volume
+    function updateBGMVolume() { bgMusic.volume = bgmVolume / 100; }
+    document.getElementById('bgmVolume').addEventListener('input', function(e) {
+        bgmVolume = e.target.value;
+        updateBGMVolume();
+    });
+    document.getElementById('sfxVolume').addEventListener('input', function(e) {
+        sfxVolume = e.target.value;
+    });
+
+    // PC Keyboard Movement + "E"
+    window.addEventListener('keydown', (e) => {
+        switch(e.key.toLowerCase()) {
+            case 'w': case 'arrowup':    game.keys.up = true;    break;
+            case 's': case 'arrowdown':  game.keys.down = true;  break;
+            case 'a': case 'arrowleft':  game.keys.left = true;  break;
+            case 'd': case 'arrowright': game.keys.right = true; break;
+            case 'e':
+                game.keys.e = true;
+                if (!game.player.isWashing) {
+                    handleInteraction();
+                }
+                break;
         }
-
-        function openHelp() {
-            openModal('helpModal');
+    });
+    window.addEventListener('keyup', (e) => {
+        switch(e.key.toLowerCase()) {
+            case 'w': case 'arrowup':    game.keys.up = false;   break;
+            case 's': case 'arrowdown':  game.keys.down = false; break;
+            case 'a': case 'arrowleft':  game.keys.left = false; break;
+            case 'd': case 'arrowright': game.keys.right = false;break;
+            case 'e':
+                game.keys.e = false;
+                game.player.isWashing = false;
+                break;
         }
+    });
 
-        function openShop() {
-            openModal('shopModal');
-            updateShopButtons();
+    /***************************************************************
+     * MOBILE CONTROLS (TOUCH-BASED JOYSTICK + INTERACT BUTTON)
+     ***************************************************************/
+    // Basic virtual joystick logic:
+    const joystickContainer = document.getElementById('joystickContainer');
+    const joystickHandle = document.getElementById('joystickHandle');
+
+    let joystickActive = false;
+    let joystickStartX = 0;
+    let joystickStartY = 0;
+
+    joystickContainer.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        joystickActive = true;
+        const touch = e.changedTouches[0];
+        joystickStartX = touch.pageX;
+        joystickStartY = touch.pageY;
+    }, { passive: false });
+
+    joystickContainer.addEventListener('touchmove', (e) => {
+        if (!joystickActive) return;
+        e.preventDefault();
+        const touch = e.changedTouches[0];
+        const dx = touch.pageX - joystickStartX;
+        const dy = touch.pageY - joystickStartY;
+        // Constrain handle within radius
+        const radius = 60; // half of container radius
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        let angle = Math.atan2(dy, dx);
+
+        let clampedDist = Math.min(dist, radius);
+        const handleX = radius + clampedDist * Math.cos(angle);
+        const handleY = radius + clampedDist * Math.sin(angle);
+
+        joystickHandle.style.left = (handleX - 20) + 'px';
+        joystickHandle.style.top = (handleY - 20) + 'px';
+
+        // Convert angle+dist to game.keys
+        // We'll consider a "dead zone" to avoid jitter
+        const deadZone = 10;
+        if (dist > deadZone) {
+            // Up/Down
+            game.keys.up = (Math.abs(dy) > Math.abs(dx) && dy < 0);
+            game.keys.down = (Math.abs(dy) > Math.abs(dx) && dy > 0);
+            // Left/Right
+            game.keys.left = (Math.abs(dx) > Math.abs(dy) && dx < 0);
+            game.keys.right = (Math.abs(dx) > Math.abs(dy) && dx > 0);
+        } else {
+            // Center
+            game.keys.up = false;
+            game.keys.down = false;
+            game.keys.left = false;
+            game.keys.right = false;
         }
+    }, { passive: false });
 
-        function updateShopButtons() {
-            document.getElementById('speedUpgradeBtn').disabled = game.player.score < 100;
-            document.getElementById('washingUpgradeBtn').disabled = game.player.score < 150;
-            document.getElementById('storageUpgradeBtn').disabled = game.player.score < 200;
+    joystickContainer.addEventListener('touchend', (e) => {
+        joystickActive = false;
+        joystickHandle.style.left = 'calc(50% - 20px)';
+        joystickHandle.style.top = 'calc(50% - 20px)';
+        // Reset keys
+        game.keys.up = false;
+        game.keys.down = false;
+        game.keys.left = false;
+        game.keys.right = false;
+    });
+
+    // Interact button
+    const interactButton = document.getElementById('interactButton');
+    interactButton.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        // Simulate "E" press
+        game.keys.e = true;
+        if (!game.player.isWashing) {
+            handleInteraction();
         }
-
-        // Volume control
-        function updateBGMVolume() {
-            bgMusic.volume = bgmVolume / 100;
-        }
-
-        document.getElementById('bgmVolume').addEventListener('input', function(e) {
-            bgmVolume = e.target.value;
-            updateBGMVolume();
-        });
-
-        document.getElementById('sfxVolume').addEventListener('input', function(e) {
-            sfxVolume = e.target.value;
-        });
-
-        // ESC key handler
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                closeModal('settingsModal');
-                closeModal('helpModal');
-                closeModal('shopModal');
-            }
-        });
+    });
+    // Releasing means we stop washing
+    interactButton.addEventListener('touchend', (e) => {
+        game.keys.e = false;
+        game.player.isWashing = false;
+    });
     </script>
 </body>
 </html>
