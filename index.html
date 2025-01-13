@@ -155,5 +155,67 @@
     Game.player = new SpritePlayer();
     UI.initialize(Game);
   </script>
+  <!-- Add this right before the closing body tag -->
+  <div id="debugOutput" style="position: fixed; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.8); color: white; padding: 10px; font-family: monospace; max-height: 200px; overflow-y: auto;">
+  </div>
+
+  <script type="module">
+    // Debug logger
+    function logDebug(msg) {
+      const debugDiv = document.getElementById('debugOutput');
+      const time = new Date().toLocaleTimeString();
+      debugDiv.innerHTML += `[${time}] ${msg}<br>`;
+      debugDiv.scrollTop = debugDiv.scrollHeight;
+    }
+
+    // Make logger global
+    window.logDebug = logDebug;
+
+    try {
+      import { SpritePlayer } from './js/spritePlayer.js';
+      import { Game } from './js/game.js';
+      import { UI } from './js/ui.js';
+
+      // Log successful imports
+      logDebug('Modules imported successfully');
+
+      try {
+        // Expose to window for inline handlers
+        window.Game = Game;
+        window.UI = UI;
+        
+        // Initialize game
+        Game.player = new SpritePlayer();
+        UI.initialize(Game);
+        
+        logDebug('Game and UI initialized');
+        
+        // Test UI methods
+        logDebug('UI methods available: ' + Object.keys(UI).join(', '));
+        
+      } catch (initError) {
+        logDebug('Initialization Error: ' + initError.message);
+        console.error('Init Error:', initError);
+      }
+
+    } catch (importError) {
+      logDebug('Import Error: ' + importError.message);
+      console.error('Import Error:', importError);
+    }
+
+    // Check if buttons are properly bound
+    window.addEventListener('load', () => {
+      try {
+        const mainMenuButtons = document.querySelectorAll('#mainMenu button');
+        logDebug(`Found ${mainMenuButtons.length} main menu buttons`);
+        
+        mainMenuButtons.forEach((btn, index) => {
+          logDebug(`Button ${index + 1}: ${btn.textContent}`);
+        });
+      } catch (buttonError) {
+        logDebug('Button Check Error: ' + buttonError.message);
+      }
+    });
+  </script>
 </body>
 </html>
