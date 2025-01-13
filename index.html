@@ -155,16 +155,5 @@
     Game.player = new SpritePlayer();
     UI.initialize(Game);
   </script>
-      <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
-</head>
-  <div class="output"></div>
-  <script language="javascript">
-      var realConsoleLog = console.log;
-      console.log = function () {
-          var message = [].join.call(arguments, " ");
-          $(".output").text(message);
-          realConsoleLog.apply(console, arguments);
-      };
-  </script>
 </body>
 </html>
