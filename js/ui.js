@@ -4,22 +4,59 @@
 import { Game } from './game.js';
 
 export const UI = {
-  game: null, // Store game instance
+  game: null,
 
   initialize(gameInstance) {
     this.game = gameInstance;
     this.game.init();
     
+    // Initialize all UI event listeners
+    this.initializeEventListeners();
+    
+    // Initialize volume controls
+    this.initializeVolumeControls();
+  },
+
+  initializeEventListeners() {
+    // Main Menu buttons
+    document.querySelector('#mainMenu button:nth-child(2)').addEventListener('click', () => this.startGame());
+    document.querySelector('#mainMenu button:nth-child(3)').addEventListener('click', () => this.openShop());
+    document.querySelector('#mainMenu button:nth-child(4)').addEventListener('click', () => this.openSettings());
+    document.querySelector('#mainMenu button:nth-child(5)').addEventListener('click', () => this.openHelp());
+
+    // In-Game Menu buttons
+    document.querySelectorAll('#inGameMenu button').forEach(button => {
+      if (button.textContent === 'Shop') {
+        button.addEventListener('click', () => this.openShop());
+      } else if (button.textContent === 'Pause') {
+        button.addEventListener('click', () => this.pauseGame());
+      }
+    });
+
+    // Pause Menu buttons
+    document.querySelectorAll('.pause-menu button').forEach(button => {
+      if (button.textContent === 'Resume') {
+        button.addEventListener('click', () => this.resumeGame());
+      } else if (button.textContent === 'Settings') {
+        button.addEventListener('click', () => this.openSettings());
+      } else if (button.textContent === 'Main Menu') {
+        button.addEventListener('click', () => this.returnToMainMenu());
+      }
+    });
+
+    // Modal close buttons
+    document.querySelectorAll('.close-button').forEach(button => {
+      button.addEventListener('click', (e) => {
+        const modalId = e.target.parentElement.id;
+        this.closeModal(modalId);
+      });
+    });
+
     // Fullscreen button
     const fsBtn = document.getElementById('fullscreenBtn');
     if (fsBtn) {
-      fsBtn.addEventListener('click', () => {
-        this.game.toggleFullscreen();
-      });
+      fsBtn.addEventListener('click', () => this.game.toggleFullscreen());
     }
-
-    // Initialize volume controls
-    this.initializeVolumeControls();
   },
 
   initializeVolumeControls() {
@@ -36,7 +73,6 @@ export const UI = {
     if (sfxRange) {
       sfxRange.addEventListener('input', (e) => {
         this.game.sfxVolume = e.target.value;
-        // If you have SFX logic, handle it here
       });
     }
   },
