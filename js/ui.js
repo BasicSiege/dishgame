@@ -1,12 +1,36 @@
 /* ui.js
    Handles UI and bridging calls to Game
 */
-import { Game } from './game.js';
-
 export const UI = {
   initialize(GameInstance) {
     this.Game = GameInstance;
     GameInstance.init();
+
+    // Main Menu Buttons
+    document.querySelector('[data-action="start-game"]').addEventListener('click', () => this.startGame());
+    document.querySelectorAll('[data-action="open-shop"]').forEach(button => {
+        button.addEventListener('click', () => this.openShop());
+    });
+    document.querySelector('[data-action="open-settings"]').addEventListener('click', () => this.openSettings());
+    document.querySelector('[data-action="open-help"]').addEventListener('click', () => this.openHelp());
+
+    // In-Game Buttons
+    document.querySelector('[data-action="pause-game"]').addEventListener('click', () => this.pauseGame());
+    document.querySelector('[data-action="resume-game"]').addEventListener('click', () => this.resumeGame());
+    document.querySelector('[data-action="return-to-menu"]').addEventListener('click', () => this.returnToMainMenu());
+
+    // Shop Buttons
+    document.getElementById('speedUpgradeBtn').addEventListener('click', () => GameInstance.purchaseSpeedUpgrade());
+    document.getElementById('washingUpgradeBtn').addEventListener('click', () => GameInstance.purchaseWashingUpgrade());
+    document.getElementById('storageUpgradeBtn').addEventListener('click', () => GameInstance.purchaseStorageUpgrade());
+
+    // Modal Close Buttons
+    document.querySelectorAll('.close-button').forEach(button => {
+      button.addEventListener('click', (e) => {
+        const modalId = e.target.closest('.modal').id;
+        this.closeModal(modalId);
+      });
+    });
 
     // Fullscreen button
     const fsBtn = document.getElementById('fullscreenBtn');
@@ -23,35 +47,33 @@ export const UI = {
     document.getElementById('inGameMenu').style.display = 'block';
     document.getElementById('mobileControls').style.display = 'flex';
 
-    Game.startGame();
+    this.Game.startGame();
   },
 
   pauseGame() {
-    Game.pauseGame();
+    this.Game.pauseGame();
   },
 
   resumeGame() {
-    Game.resumeGame();
+    this.Game.resumeGame();
   },
 
   returnToMainMenu() {
-    Game.returnToMainMenu();
+    this.Game.returnToMainMenu();
   },
 
   openShop() {
-    // Removed auto-pause
-    // if (Game.gameStarted && !Game.gamePaused) Game.pauseGame();
     this.openModal('shopModal');
-    Game.updateShopButtons();
+    this.Game.updateShopButtons();
   },
 
   openSettings() {
-    if (Game.gameStarted && !Game.gamePaused) Game.pauseGame();
+    if (this.Game.gameStarted && !this.Game.gamePaused) this.Game.pauseGame();
     this.openModal('settingsModal');
   },
 
   openHelp() {
-    if (Game.gameStarted && !Game.gamePaused) Game.pauseGame();
+    if (this.Game.gameStarted && !this.Game.gamePaused) this.Game.pauseGame();
     this.openModal('helpModal');
   },
 
@@ -64,11 +86,9 @@ export const UI = {
     document.getElementById(modalId).style.display = 'none';
     document.getElementById('modalOverlay').style.display = 'none';
 
-    // If you do NOT want the pause overlay to show automatically,
-    // you can remove or comment out this "resume" logic below:
-    if (Game.gameStarted && Game.gamePaused &&
+    if (this.Game.gameStarted && this.Game.gamePaused &&
         document.getElementById('pauseOverlay').style.display !== 'flex') {
-      Game.resumeGame();
+      this.Game.resumeGame();
     }
   }
 };
@@ -77,12 +97,14 @@ export const UI = {
 window.addEventListener('load', () => {
   const bgmRange = document.getElementById('bgmVolume');
   const sfxRange = document.getElementById('sfxVolume');
+  
   if (bgmRange) {
     bgmRange.addEventListener('input', (e) => {
       Game.bgmVolume = e.target.value;
       Game.updateBGMVolume();
     });
   }
+  
   if (sfxRange) {
     sfxRange.addEventListener('input', (e) => {
       Game.sfxVolume = e.target.value;
