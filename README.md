@@ -113,4 +113,4 @@ Access the **Shop** button located in the top-right corner of the screen to purc
 
 Thank you for playing **Dishwashing Joys**! We hope you enjoy the frantic fun of managing the busiest dish station in town. Keep an eye out for future updates, and happy washing!  
 
-*For any questions or feedback, feel free to reach out to us at [your support contact/email].*
+*For any questions or feedback, feel free to reach out to me at siege.lolz on Discord.*
