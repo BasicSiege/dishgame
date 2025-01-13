@@ -18,24 +18,25 @@
   <!-- Main Menu -->
   <div id="mainMenu">
     <h1 class="menu-title">Dishwashing Joys</h1>
-    <button class="menu-button" onclick="UI.startGame()">Play</button>
-    <button class="menu-button" onclick="UI.openShop()">Shop</button>
-    <button class="menu-button" onclick="UI.openSettings()">Settings</button>
-    <button class="menu-button" onclick="UI.openHelp()">Help</button>
+    <button class="menu-button" data-action="start-game">Play</button>
+    <button class="menu-button" data-action="open-shop">Shop</button>
+    <button class="menu-button" data-action="open-settings">Settings</button>
+    <button class="menu-button" data-action="open-help">Help</button>
   </div>
+
   <!-- In-Game UI -->
   <div id="inGameMenu">
-    <button class="in-game-button" onclick="UI.openShop()">Shop</button>
-    <button class="in-game-button" onclick="UI.pauseGame()">Pause</button>
+    <button class="in-game-button" data-action="open-shop">Shop</button>
+    <button class="in-game-button" data-action="pause-game">Pause</button>
   </div>
 
   <!-- Pause Overlay -->
   <div id="pauseOverlay">
     <div class="pause-menu">
       <h2 class="pause-title">GAME PAUSED</h2>
-      <button class="pause-button" onclick="UI.resumeGame()">Resume</button>
-      <button class="pause-button" onclick="UI.openSettings()">Settings</button>
-      <button class="pause-button" onclick="UI.returnToMainMenu()">Main Menu</button>
+      <button class="pause-button" data-action="resume-game">Resume</button>
+      <button class="pause-button" data-action="open-settings">Settings</button>
+      <button class="pause-button" data-action="return-to-menu">Main Menu</button>
     </div>
   </div>
 
@@ -44,7 +45,7 @@
 
   <!-- Settings Modal -->
   <div id="settingsModal" class="modal">
-    <span class="close-button" onclick="UI.closeModal('settingsModal')">&times;</span>
+    <span class="close-button">&times;</span>
     <h2 class="modal-title">GAME SETTINGS</h2>
     <div class="modal-content">
       <div class="settings-control">
@@ -84,40 +85,39 @@
       </ul>
     </div>
   </div>
-
-  <!-- Shop Modal -->
-  <div id="shopModal" class="modal">
-    <span class="close-button" onclick="UI.closeModal('shopModal')">&times;</span>
-    <h2 class="modal-title">UPGRADE SHOP</h2>
-    <div class="modal-content">
-      <div class="shop-item">
-        <div>
-          <h3>Speed Boost</h3>
-          <p>Move 20% faster</p>
-        </div>
-        <button onclick="Game.purchaseSpeedUpgrade()" id="speedUpgradeBtn">Buy (100)</button>
+  
+<!-- Shop Modal -->
+<div id="shopModal" class="modal">
+  <span class="close-button" data-action="close-shop">&times;</span>
+  <h2 class="modal-title">UPGRADE SHOP</h2>
+  <div class="modal-content">
+    <div class="shop-item">
+      <div>
+        <h3>Speed Boost</h3>
+        <p>Move 20% faster</p>
       </div>
-      <div class="shop-item">
-        <div>
-          <h3>Washing Master</h3>
-          <p>Wash dishes 30% faster</p>
-        </div>
-        <button onclick="Game.purchaseWashingUpgrade()" id="washingUpgradeBtn">Buy (150)</button>
+      <button data-action="purchase-speed" id="speedUpgradeBtn">Buy (100)</button>
+    </div>
+    <div class="shop-item">
+      <div>
+        <h3>Washing Master</h3>
+        <p>Wash dishes 30% faster</p>
       </div>
-      <div class="shop-item">
-        <div>
-          <h3>Extra Storage</h3>
-          <p>Store more dishes on shelves</p>
-        </div>
-        <button onclick="Game.purchaseStorageUpgrade()" id="storageUpgradeBtn">Buy (200)</button>
+      <button data-action="purchase-washing" id="washingUpgradeBtn">Buy (150)</button>
+    </div>
+    <div class="shop-item">
+      <div>
+        <h3>Extra Storage</h3>
+        <p>Store more dishes on shelves</p>
       </div>
+      <button data-action="purchase-storage" id="storageUpgradeBtn">Buy (200)</button>
     </div>
   </div>
+</div>
 
   <!-- Game Container -->
   <div id="gameContainer">
     <canvas id="gameCanvas" width="800" height="600"></canvas>
-
     <div id="scoreDisplay">Score: 0</div>
     <div id="cleanedDishesDisplay">Cleaned: 0</div>
     <div id="promptText"></div>
@@ -127,7 +127,7 @@
     <div id="player"></div>
   </div>
 
-  <!-- MOBILE CONTROLS (Hidden on large screens) -->
+  <!-- MOBILE CONTROLS -->
   <div id="mobileControls">
     <div class="controls-wrap">
       <div id="joystickContainer">
@@ -137,7 +137,7 @@
     </div>
   </div>
 
-  <!-- Fullscreen Button (Fixed at bottom-right of the entire screen) -->
+  <!-- Fullscreen Button -->
   <button id="fullscreenBtn" class="fullscreen-button">Fullscreen</button>
 
   <script type="module">
@@ -145,11 +145,7 @@
     import { Game } from './js/game.js';
     import { UI } from './js/ui.js';
 
-    // Expose to window so inline onclicks work
-    window.Game = Game;
-    window.UI = UI;
-
-    // Attach sprite to Game
+    // Initialize game
     Game.player = new SpritePlayer();
     UI.initialize(Game);
   </script>
