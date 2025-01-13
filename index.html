@@ -1,54 +1,61 @@
+<!-- index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Dishwashing Joys</title>
-
-  <!-- 8-bit style font -->
-  <link
-    href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap"
-    rel="stylesheet"
-  />
-  <link rel="stylesheet" href="./css/style.css" />
-
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 </head>
 <body>
-      
   <!-- Main Menu -->
-<!-- Main Menu -->
   <div id="mainMenu">
     <h1 class="menu-title">Dishwashing Joys</h1>
-    <button class="menu-button">Play</button>
-    <button class="menu-button">Shop</button>
-    <button class="menu-button">Settings</button>
-    <button class="menu-button">Help</button>
-  </div>
-
-  <!-- In-Game UI -->
-  <div id="inGameMenu">
-    <button class="in-game-button">Shop</button>
-    <button class="in-game-button">Pause</button>
-  </div>
-
-  <!-- Pause Overlay -->
-  <div id="pauseOverlay">
-    <div class="pause-menu">
-      <h2 class="pause-title">GAME PAUSED</h2>
-      <button class="pause-button">Resume</button>
-      <button class="pause-button">Settings</button>
-      <button class="pause-button">Main Menu</button>
+    <div class="menu-buttons">
+      <button class="menu-button" id="playButton">Play</button>
+      <button class="menu-button" id="shopButton">Shop</button>
+      <button class="menu-button" id="settingsButton">Settings</button>
+      <button class="menu-button" id="helpButton">Help</button>
     </div>
   </div>
 
-  <!-- Dark overlay for modals -->
-  <div class="modal-overlay" id="modalOverlay"></div>
+  <!-- Game Container -->
+  <div id="gameContainer" style="display: none;">
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <div id="scoreDisplay">Score: 0</div>
+    <div id="cleanedDishesDisplay">Cleaned: 0</div>
+    <div id="promptText"></div>
+    <div id="washingProgress">
+      <div id="progressBar"></div>
+    </div>
+    <div id="player"></div>
+  </div>
+
+  <!-- In-Game Menu -->
+  <div id="inGameMenu" style="display: none;">
+    <button class="in-game-button" id="inGameShopBtn">Shop</button>
+    <button class="in-game-button" id="inGamePauseBtn">Pause</button>
+  </div>
+
+  <!-- Pause Overlay -->
+  <div id="pauseOverlay" style="display: none;">
+    <div class="pause-menu">
+      <h2 class="pause-title">GAME PAUSED</h2>
+      <button class="pause-button" id="resumeButton">Resume</button>
+      <button class="pause-button" id="pauseSettingsButton">Settings</button>
+      <button class="pause-button" id="mainMenuButton">Main Menu</button>
+    </div>
+  </div>
+
+  <!-- Modal Overlay -->
+  <div id="modalOverlay" class="modal-overlay" style="display: none;"></div>
 
   <!-- Settings Modal -->
-  <div id="settingsModal" class="modal">
-    <span class="close-button" onclick="UI.closeModal('settingsModal')">&times;</span>
-    <h2 class="modal-title">GAME SETTINGS</h2>
+  <div id="settingsModal" class="modal" style="display: none;">
     <div class="modal-content">
+      <span class="close-button">&times;</span>
+      <h2 class="modal-title">SETTINGS</h2>
       <div class="settings-control">
         <label>BG Music Volume:</label>
         <input type="range" min="0" max="100" value="50" id="bgmVolume">
@@ -60,77 +67,60 @@
     </div>
   </div>
 
-  <!-- Help Modal -->
-  <div id="helpModal" class="modal">
-    <span class="close-button" onclick="UI.closeModal('helpModal')">&times;</span>
-    <h2 class="modal-title">HOW TO PLAY</h2>
-    <div class="modal-content">
-      <p>Controls:</p>
-      <ul>
-        <li>Use WASD or Arrow Keys to move</li>
-        <li>"E" to pick up Dirty Dishes</li>
-        <li>Hold "E" to wash Dishes</li>
-        <li>"E" to put away dishes</li>
-      </ul>
-      <p>Tips:</p>
-      <ul>
-        <li>Wait for dishes to build up before collection</li>
-        <li>Upgrade your speed and washing abilities in the shop</li>
-        <li>Keep an eye on your score to buy upgrades</li>
-      </ul>
-      <p>Where to put dishes on shelf:</p>
-      <ul>
-        <li>Bowls go on top shelf</li>
-        <li>Plates go on middle shelf</li>
-        <li>Cups go on bottom shelf</li>
-      </ul>
-    </div>
-  </div>
-
   <!-- Shop Modal -->
-  <div id="shopModal" class="modal">
-    <span class="close-button" onclick="UI.closeModal('shopModal')">&times;</span>
-    <h2 class="modal-title">UPGRADE SHOP</h2>
+  <div id="shopModal" class="modal" style="display: none;">
     <div class="modal-content">
+      <span class="close-button">&times;</span>
+      <h2 class="modal-title">UPGRADE SHOP</h2>
       <div class="shop-item">
         <div>
           <h3>Speed Boost</h3>
           <p>Move 20% faster</p>
         </div>
-        <button onclick="Game.purchaseSpeedUpgrade()" id="speedUpgradeBtn">Buy (100)</button>
+        <button id="speedUpgradeBtn">Buy (100)</button>
       </div>
       <div class="shop-item">
         <div>
           <h3>Washing Master</h3>
           <p>Wash dishes 30% faster</p>
         </div>
-        <button onclick="Game.purchaseWashingUpgrade()" id="washingUpgradeBtn">Buy (150)</button>
+        <button id="washingUpgradeBtn">Buy (150)</button>
       </div>
       <div class="shop-item">
         <div>
           <h3>Extra Storage</h3>
           <p>Store more dishes on shelves</p>
         </div>
-        <button onclick="Game.purchaseStorageUpgrade()" id="storageUpgradeBtn">Buy (200)</button>
+        <button id="storageUpgradeBtn">Buy (200)</button>
       </div>
     </div>
   </div>
 
-  <!-- Game Container -->
-  <div id="gameContainer">
-    <canvas id="gameCanvas" width="800" height="600"></canvas>
-
-    <div id="scoreDisplay">Score: 0</div>
-    <div id="cleanedDishesDisplay">Cleaned: 0</div>
-    <div id="promptText"></div>
-    <div id="washingProgress">
-      <div id="progressBar"></div>
+  <!-- Help Modal -->
+  <div id="helpModal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <span class="close-button">&times;</span>
+      <h2 class="modal-title">HOW TO PLAY</h2>
+      <div class="help-content">
+        <p>Controls:</p>
+        <ul>
+          <li>Use WASD or Arrow Keys to move</li>
+          <li>"E" to pick up Dirty Dishes</li>
+          <li>Hold "E" to wash Dishes</li>
+          <li>"E" to put away dishes</li>
+        </ul>
+        <p>Tips:</p>
+        <ul>
+          <li>Wait for dishes to build up before collection</li>
+          <li>Upgrade your speed and washing abilities in the shop</li>
+          <li>Keep an eye on your score to buy upgrades</li>
+        </ul>
+      </div>
     </div>
-    <div id="player"></div>
   </div>
 
-  <!-- MOBILE CONTROLS (Hidden on large screens) -->
-  <div id="mobileControls">
+  <!-- Mobile Controls -->
+  <div id="mobileControls" style="display: none;">
     <div class="controls-wrap">
       <div id="joystickContainer">
         <div id="joystickHandle"></div>
@@ -139,7 +129,7 @@
     </div>
   </div>
 
-  <!-- Fullscreen Button (Fixed at bottom-right of the entire screen) -->
+  <!-- Fullscreen Button -->
   <button id="fullscreenBtn" class="fullscreen-button">Fullscreen</button>
 
   <script type="module">
@@ -147,11 +137,9 @@
     import { Game } from './js/game.js';
     import { UI } from './js/ui.js';
 
-    // Expose to window so inline onclicks work
     window.Game = Game;
     window.UI = UI;
 
-    // Attach sprite to Game
     Game.player = new SpritePlayer();
     UI.initialize(Game);
   </script>
