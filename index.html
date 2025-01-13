@@ -156,66 +156,53 @@
     UI.initialize(Game);
   </script>
   <!-- Add this right before the closing body tag -->
-  <div id="debugOutput" style="position: fixed; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.8); color: white; padding: 10px; font-family: monospace; max-height: 200px; overflow-y: auto;">
-  </div>
+ <div id="errorDisplay" style="position: fixed; bottom: 10px; left: 10px; right: 10px; background: red; color: white; padding: 10px; display: none; z-index: 9999;"></div>
+
+  <!-- Rest of your HTML remains the same -->
+  
+  <!-- Add this right before your module script -->
+  <script>
+    function showError(callback) {
+      try {
+        callback();
+      } catch (error) {
+        const errorDiv = document.getElementById('errorDisplay');
+        errorDiv.textContent = 'Error: ' + error;
+        errorDiv.style.display = 'block';
+        setTimeout(() => {
+          errorDiv.style.display = 'none';
+        }, 5000);
+      }
+    }
+  </script>
 
   <script type="module">
-    // Debug logger
-    function logDebug(msg) {
-      const debugDiv = document.getElementById('debugOutput');
-      const time = new Date().toLocaleTimeString();
-      debugDiv.innerHTML += `[${time}] ${msg}<br>`;
-      debugDiv.scrollTop = debugDiv.scrollHeight;
-    }
+    import { SpritePlayer } from './js/spritePlayer.js';
+    import { Game } from './js/game.js';
+    import { UI } from './js/ui.js';
 
-    // Make logger global
-    window.logDebug = logDebug;
+    // Expose to window so inline onclicks work
+    window.Game = Game;
+    window.UI = UI;
+    window.showError = showError;
 
+    // Attach sprite to Game
+    Game.player = new SpritePlayer();
+    UI.initialize(Game);
+
+    // Show any initialization errors
     try {
-      import { SpritePlayer } from './js/spritePlayer.js';
-      import { Game } from './js/game.js';
-      import { UI } from './js/ui.js';
-
-      // Log successful imports
-      logDebug('Modules imported successfully');
-
-      try {
-        // Expose to window for inline handlers
-        window.Game = Game;
-        window.UI = UI;
-        
-        // Initialize game
-        Game.player = new SpritePlayer();
-        UI.initialize(Game);
-        
-        logDebug('Game and UI initialized');
-        
-        // Test UI methods
-        logDebug('UI methods available: ' + Object.keys(UI).join(', '));
-        
-      } catch (initError) {
-        logDebug('Initialization Error: ' + initError.message);
-        console.error('Init Error:', initError);
-      }
-
-    } catch (importError) {
-      logDebug('Import Error: ' + importError.message);
-      console.error('Import Error:', importError);
+      const errorDiv = document.getElementById('errorDisplay');
+      errorDiv.textContent = 'UI Methods Available: ' + Object.keys(UI);
+      errorDiv.style.display = 'block';
+      setTimeout(() => {
+        errorDiv.style.display = 'none';
+      }, 5000);
+    } catch (error) {
+      const errorDiv = document.getElementById('errorDisplay');
+      errorDiv.textContent = 'Init Error: ' + error;
+      errorDiv.style.display = 'block';
     }
-
-    // Check if buttons are properly bound
-    window.addEventListener('load', () => {
-      try {
-        const mainMenuButtons = document.querySelectorAll('#mainMenu button');
-        logDebug(`Found ${mainMenuButtons.length} main menu buttons`);
-        
-        mainMenuButtons.forEach((btn, index) => {
-          logDebug(`Button ${index + 1}: ${btn.textContent}`);
-        });
-      } catch (buttonError) {
-        logDebug('Button Check Error: ' + buttonError.message);
-      }
-    });
   </script>
 </body>
 </html>
