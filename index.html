@@ -14,6 +14,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
 </head>
 <body>
+      
   <!-- Main Menu -->
   <div id="mainMenu">
     <h1 class="menu-title">Dishwashing Joys</h1>
@@ -22,7 +23,6 @@
     <button class="menu-button" onclick="UI.openSettings()">Settings</button>
     <button class="menu-button" onclick="UI.openHelp()">Help</button>
   </div>
-
   <!-- In-Game UI -->
   <div id="inGameMenu">
     <button class="in-game-button" onclick="UI.openShop()">Shop</button>
@@ -144,19 +144,12 @@
     import { SpritePlayer } from './js/spritePlayer.js';
     import { Game } from './js/game.js';
     import { UI } from './js/ui.js';
-    import { stopRain } from './js/rain.js'; // Import stopRain
-  
-    // Override the existing UI.startGame to also stop the rain
-    const originalStartGame = UI.startGame.bind(UI);
-    UI.startGame = function() {
-      stopRain();
-      originalStartGame();
-    };
-  
+
+    // Expose to window so inline onclicks work
     window.Game = Game;
     window.UI = UI;
-  
-    // Initialize the game
+
+    // Attach sprite to Game
     Game.player = new SpritePlayer();
     UI.initialize(Game);
   </script>
