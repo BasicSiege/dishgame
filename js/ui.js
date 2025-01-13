@@ -1,79 +1,105 @@
 /* ui.js
    Handles UI and bridging calls to Game
 */
-import { Game } from './game.js';
 
 export const UI = {
   game: null,
-
+  
   initialize(gameInstance) {
     this.game = gameInstance;
     this.game.init();
     
-    // Initialize all UI event listeners
-    this.initializeEventListeners();
-    
-    // Initialize volume controls
-    this.initializeVolumeControls();
+    // Wait for DOM to be fully loaded
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => this.setupUI());
+    } else {
+      this.setupUI();
+    }
   },
 
-  initializeEventListeners() {
+  setupUI() {
     // Main Menu buttons
-    document.querySelector('#mainMenu button:nth-child(2)').addEventListener('click', () => this.startGame());
-    document.querySelector('#mainMenu button:nth-child(3)').addEventListener('click', () => this.openShop());
-    document.querySelector('#mainMenu button:nth-child(4)').addEventListener('click', () => this.openSettings());
-    document.querySelector('#mainMenu button:nth-child(5)').addEventListener('click', () => this.openHelp());
+    const mainMenuButtons = document.querySelectorAll('#mainMenu .menu-button');
+    mainMenuButtons.forEach(button => {
+      switch(button.textContent) {
+        case 'Play':
+          button.onclick = () => this.startGame();
+          break;
+        case 'Shop':
+          button.onclick = () => this.openShop();
+          break;
+        case 'Settings':
+          button.onclick = () => this.openSettings();
+          break;
+        case 'Help':
+          button.onclick = () => this.openHelp();
+          break;
+      }
+    });
 
     // In-Game Menu buttons
-    document.querySelectorAll('#inGameMenu button').forEach(button => {
-      if (button.textContent === 'Shop') {
-        button.addEventListener('click', () => this.openShop());
-      } else if (button.textContent === 'Pause') {
-        button.addEventListener('click', () => this.pauseGame());
+    const inGameButtons = document.querySelectorAll('#inGameMenu .in-game-button');
+    inGameButtons.forEach(button => {
+      switch(button.textContent) {
+        case 'Shop':
+          button.onclick = () => this.openShop();
+          break;
+        case 'Pause':
+          button.onclick = () => this.pauseGame();
+          break;
       }
     });
 
     // Pause Menu buttons
-    document.querySelectorAll('.pause-menu button').forEach(button => {
-      if (button.textContent === 'Resume') {
-        button.addEventListener('click', () => this.resumeGame());
-      } else if (button.textContent === 'Settings') {
-        button.addEventListener('click', () => this.openSettings());
-      } else if (button.textContent === 'Main Menu') {
-        button.addEventListener('click', () => this.returnToMainMenu());
+    const pauseButtons = document.querySelectorAll('.pause-menu .pause-button');
+    pauseButtons.forEach(button => {
+      switch(button.textContent) {
+        case 'Resume':
+          button.onclick = () => this.resumeGame();
+          break;
+        case 'Settings':
+          button.onclick = () => this.openSettings();
+          break;
+        case 'Main Menu':
+          button.onclick = () => this.returnToMainMenu();
+          break;
       }
     });
 
     // Modal close buttons
-    document.querySelectorAll('.close-button').forEach(button => {
-      button.addEventListener('click', (e) => {
-        const modalId = e.target.parentElement.id;
+    const closeButtons = document.querySelectorAll('.close-button');
+    closeButtons.forEach(button => {
+      button.onclick = () => {
+        const modalId = button.closest('.modal').id;
         this.closeModal(modalId);
-      });
+      };
     });
 
     // Fullscreen button
-    const fsBtn = document.getElementById('fullscreenBtn');
-    if (fsBtn) {
-      fsBtn.addEventListener('click', () => this.game.toggleFullscreen());
+    const fullscreenBtn = document.getElementById('fullscreenBtn');
+    if (fullscreenBtn) {
+      fullscreenBtn.onclick = () => this.game.toggleFullscreen();
     }
+
+    // Volume controls
+    this.initializeVolumeControls();
   },
 
   initializeVolumeControls() {
-    const bgmRange = document.getElementById('bgmVolume');
-    const sfxRange = document.getElementById('sfxVolume');
+    const bgmVolume = document.getElementById('bgmVolume');
+    const sfxVolume = document.getElementById('sfxVolume');
     
-    if (bgmRange) {
-      bgmRange.addEventListener('input', (e) => {
-        this.game.bgmVolume = e.target.value;
+    if (bgmVolume) {
+      bgmVolume.onchange = (e) => {
+        this.game.bgmVolume = parseInt(e.target.value);
         this.game.updateBGMVolume();
-      });
+      };
     }
     
-    if (sfxRange) {
-      sfxRange.addEventListener('input', (e) => {
-        this.game.sfxVolume = e.target.value;
-      });
+    if (sfxVolume) {
+      sfxVolume.onchange = (e) => {
+        this.game.sfxVolume = parseInt(e.target.value);
+      };
     }
   },
 
@@ -117,17 +143,25 @@ export const UI = {
   },
 
   openModal(modalId) {
-    document.getElementById(modalId).style.display = 'block';
-    document.getElementById('modalOverlay').style.display = 'block';
+    const modal = document.getElementById(modalId);
+    const overlay = document.getElementById('modalOverlay');
+    if (modal && overlay) {
+      modal.style.display = 'block';
+      overlay.style.display = 'block';
+    }
   },
 
   closeModal(modalId) {
-    document.getElementById(modalId).style.display = 'none';
-    document.getElementById('modalOverlay').style.display = 'none';
-    
-    if (this.game.gameStarted && this.game.gamePaused &&
-        document.getElementById('pauseOverlay').style.display !== 'flex') {
-      this.game.resumeGame();
+    const modal = document.getElementById(modalId);
+    const overlay = document.getElementById('modalOverlay');
+    if (modal && overlay) {
+      modal.style.display = 'none';
+      overlay.style.display = 'none';
+      
+      if (this.game.gameStarted && this.game.gamePaused &&
+          document.getElementById('pauseOverlay').style.display !== 'flex') {
+        this.game.resumeGame();
+      }
     }
   }
 };
