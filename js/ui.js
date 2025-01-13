@@ -1,6 +1,4 @@
-/* ui.js
-   Handles UI and bridging calls to Game 
-*/
+/* ui.js */
 export const UI = {
   game: null,
   
@@ -8,7 +6,6 @@ export const UI = {
     this.game = gameInstance;
     this.game.init();
     
-    // Initialize when DOM is ready
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', () => this.setupUI());
     } else {
@@ -17,52 +14,22 @@ export const UI = {
   },
 
   setupUI() {
-    // Main Menu buttons
-    const mainMenuButtons = document.querySelectorAll('#mainMenu .menu-button');
-    mainMenuButtons.forEach(button => {
-      button.addEventListener('click', () => {
-        const buttonText = button.textContent.trim();
-        console.log('Main menu button clicked:', buttonText); // Debug log
-        
-        switch(buttonText) {
-          case 'Play':
-            this.startGame();
-            break;
-          case 'Shop':
-            this.openShop();
-            break;
-          case 'Settings':
-            this.openSettings();
-            break;
-          case 'Help':
-            this.openHelp();
-            break;
-        }
-      });
-    });
+    // Main Menu Buttons
+    document.getElementById('playButton').addEventListener('click', () => this.startGame());
+    document.getElementById('shopButton').addEventListener('click', () => this.openShop());
+    document.getElementById('settingsButton').addEventListener('click', () => this.openSettings());
+    document.getElementById('helpButton').addEventListener('click', () => this.openHelp());
 
-    // In-Game Menu buttons
-    const inGameButtons = document.querySelectorAll('#inGameMenu .in-game-button');
-    inGameButtons.forEach(button => {
-      button.addEventListener('click', () => {
-        const buttonText = button.textContent.trim();
-        if (buttonText === 'Shop') this.openShop();
-        if (buttonText === 'Pause') this.pauseGame();
-      });
-    });
+    // In-Game Menu Buttons
+    document.getElementById('inGameShopBtn').addEventListener('click', () => this.openShop());
+    document.getElementById('inGamePauseBtn').addEventListener('click', () => this.pauseGame());
 
-    // Pause Menu buttons
-    const pauseButtons = document.querySelectorAll('.pause-menu .pause-button');
-    pauseButtons.forEach(button => {
-      button.addEventListener('click', () => {
-        const buttonText = button.textContent.trim();
-        if (buttonText === 'Resume') this.resumeGame();
-        if (buttonText === 'Settings') this.openSettings();
-        if (buttonText === 'Main Menu') this.returnToMainMenu();
-      });
-    });
+    // Pause Menu Buttons
+    document.getElementById('resumeButton').addEventListener('click', () => this.resumeGame());
+    document.getElementById('pauseSettingsButton').addEventListener('click', () => this.openSettings());
+    document.getElementById('mainMenuButton').addEventListener('click', () => this.returnToMainMenu());
 
-    // Modal close buttons
+    // Close buttons for modals
     document.querySelectorAll('.close-button').forEach(button => {
       button.addEventListener('click', (e) => {
         const modalId = e.target.closest('.modal').id;
@@ -70,24 +37,18 @@ export const UI = {
       });
     });
 
+    // Shop Upgrade Buttons
+    document.getElementById('speedUpgradeBtn').addEventListener('click', () => this.game.purchaseSpeedUpgrade());
+    document.getElementById('washingUpgradeBtn').addEventListener('click', () => this.game.purchaseWashingUpgrade());
+    document.getElementById('storageUpgradeBtn').addEventListener('click', () => this.game.purchaseStorageUpgrade());
+
     // Fullscreen button
-    const fullscreenBtn = document.getElementById('fullscreenBtn');
-    if (fullscreenBtn) {
-      fullscreenBtn.addEventListener('click', () => this.game.toggleFullscreen());
-    }
+    document.getElementById('fullscreenBtn').addEventListener('click', () => this.game.toggleFullscreen());
 
-    // Shop buttons
-    document.querySelectorAll('.shop-item button').forEach(button => {
-      button.addEventListener('click', (e) => {
-        const buttonId = e.target.id;
-        if (buttonId === 'speedUpgradeBtn') this.game.purchaseSpeedUpgrade();
-        if (buttonId === 'washingUpgradeBtn') this.game.purchaseWashingUpgrade();
-        if (buttonId === 'storageUpgradeBtn') this.game.purchaseStorageUpgrade();
-      });
-    });
-
-    // Volume controls
+    // Volume Controls
     this.initializeVolumeControls();
+
+    console.log('UI Setup Complete');
   },
 
   initializeVolumeControls() {
@@ -109,7 +70,7 @@ export const UI = {
   },
 
   startGame() {
-    console.log('Starting game...'); // Debug log
+    console.log('Starting game...');
     document.getElementById('mainMenu').style.display = 'none';
     document.getElementById('gameContainer').style.display = 'block';
     document.getElementById('inGameMenu').style.display = 'block';
@@ -130,11 +91,15 @@ export const UI = {
   },
 
   openShop() {
+    console.log('Opening shop...');
     this.openModal('shopModal');
-    this.game.updateShopButtons();
+    if (this.game.gameStarted) {
+      this.game.updateShopButtons();
+    }
   },
 
   openSettings() {
+    console.log('Opening settings...');
     if (this.game.gameStarted && !this.game.gamePaused) {
       this.game.pauseGame();
     }
@@ -142,6 +107,7 @@ export const UI = {
   },
 
   openHelp() {
+    console.log('Opening help...');
     if (this.game.gameStarted && !this.game.gamePaused) {
       this.game.pauseGame();
     }
@@ -149,11 +115,14 @@ export const UI = {
   },
 
   openModal(modalId) {
+    console.log(`Opening modal: ${modalId}`);
     const modal = document.getElementById(modalId);
     const overlay = document.getElementById('modalOverlay');
     if (modal && overlay) {
       modal.style.display = 'block';
       overlay.style.display = 'block';
+    } else {
+      console.error(`Failed to find modal or overlay. Modal: ${modal}, Overlay: ${overlay}`);
     }
   },
 
