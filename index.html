@@ -14,7 +14,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
 </head>
 <body>
-<div id="rainContainer"></div>
   <script>
     function generateDJFavicon() {
       const size = 40;
@@ -53,14 +52,15 @@
     });
   </script>
   
-  <!-- Main Menu -->
-  <div id="mainMenu">
+<!-- Main Menu -->
+<div id="mainMenu">
+    <div id="rainContainer"></div>  <!-- Move it here -->
     <h1 class="menu-title">Dishwashing Joys</h1>
     <button class="menu-button" data-action="start-game">Play</button>
     <button class="menu-button" data-action="open-shop">Shop</button>
     <button class="menu-button" data-action="open-settings">Settings</button>
     <button class="menu-button" data-action="open-help">Help</button>
-  </div>
+</div>
 
   <!-- In-Game UI -->
   <div id="inGameMenu">
