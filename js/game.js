@@ -73,8 +73,8 @@ export const Game = {
 
   loadAssets() {
     const toLoad = [
-      'dirtyplate','cleanplate','dirtybowl','cleanbowl',
-      'dirtycup','cleancup','shelf','sink','bustub'
+      'dirtyPlate','cleanPlate','dirtyBowl','cleanBowl',
+      'dirtyCup','cleanCup','shelf','sink','bustub'
     ];
     toLoad.forEach(name => {
       this.images[name] = new Image();
