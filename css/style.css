@@ -341,14 +341,14 @@ canvas {
     width: 100%;
     height: 100%;
     pointer-events: none;
-    z-index: 1;
+    z-index: -1;
 }
 
 .rain-drop {
   position: absolute;
   width: 50px;
   height: 50px;
-  opacity: 0.5;
+  /* opacity: 0.5; */
   animation: fall linear forwards;
   filter: blur(1px);  /* Slight blur for depth */
   transform: rotate(15deg);  /* Slight tilt */
