@@ -345,13 +345,14 @@ canvas {
 }
 
 .rain-drop {
-  position: absolute;
-  width: 50px;
-  height: 50px;
-  /* opacity: 0.5; */
-  animation: fall linear forwards;
-  filter: blur(1px);  /* Slight blur for depth */
-  transform: rotate(15deg);  /* Slight tilt */
+    position: absolute;
+    width: 64px;  /* Increased from 50px */
+    height: 64px;  /* Increased from 50px */
+    opacity: 0.7;  /* Slightly increased opacity */
+    animation: fall linear forwards;
+    image-rendering: pixelated;  /* This will keep pixel art crisp */
+    transform: rotate(15deg);
+    will-change: transform;  /* Optimizes animation performance */
 }
 
 @keyframes fall {
