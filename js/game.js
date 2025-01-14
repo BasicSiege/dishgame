@@ -53,69 +53,32 @@ export const Game = {
     }
   },
 
-  /**
-   * Preload all images before starting the game.
-   * Returns a Promise that resolves when all images are loaded,
-   * or rejects if any image fails to load.
-   */
+  init() {
+    this.canvas = document.getElementById('gameCanvas');
+    this.ctx = this.canvas.getContext('2d');
+    this.loadAssets();
+    this.player = this.player || new SpritePlayer();
+
+    // Audio
+    this.bgMusic = new Audio('./assets/music.mp3');
+    this.bgMusic.loop = true;
+    this.updateBGMVolume();
+
+    // Intervals
+    setInterval(() => this.removeDishes(), 1000);
+
+    // Setup input
+    this.setupInput();
+  },
+
   loadAssets() {
     const toLoad = [
       'dirtyplate','cleanplate','dirtybowl','cleanbowl',
       'dirtycup','cleancup','shelf','sink','bustub'
     ];
-
-    let loadedCount = 0;
-    return new Promise((resolve, reject) => {
-      toLoad.forEach(name => {
-        this.images[name] = new Image();
-        this.images[name].src = `./assets/art/${name}.png`;
-
-        // onload increments the loadedCount
-        this.images[name].onload = () => {
-          loadedCount++;
-          if (loadedCount === toLoad.length) {
-            resolve(); // All images loaded
-          }
-        };
-
-        // onerror calls reject so we know which file failed
-        this.images[name].onerror = () => {
-          console.error(`Failed to load image: ${name}`);
-          reject(`Failed to load image: ${name}`);
-        };
-      });
-    });
-  },
-
-  init() {
-    // Load assets first
-    this.loadAssets().then(() => {
-      console.log('All images loaded successfully!');
-
-      // Once images are loaded, set up canvas/context
-      this.canvas = document.getElementById('gameCanvas');
-      this.ctx = this.canvas.getContext('2d');
-
-      // If player not already set
-      this.player = this.player || new SpritePlayer();
-
-      // Audio
-      this.bgMusic = new Audio('./assets/music.mp3');
-      this.bgMusic.loop = true;
-      this.updateBGMVolume();
-
-      // Intervals
-      setInterval(() => this.removeDishes(), 1000);
-
-      // Setup input
-      this.setupInput();
-
-      // Optionally, start the game here,
-      // or keep the UI flow that starts the game on "Play" button
-      // this.startGame();
-    }).catch(error => {
-      console.error('Error loading assets:', error);
-      // Handle the error, display a message, etc.
+    toLoad.forEach(name => {
+      this.images[name] = new Image();
+      this.images[name].src = `./assets/art/${name}.png`;
     });
   },
 
@@ -177,7 +140,7 @@ export const Game = {
       const dx = touch.pageX - joystickStartX;
       const dy = touch.pageY - joystickStartY;
       const radius = 60;
-      const dist = Math.sqrt(dx * dx + dy * dy);
+      const dist = Math.sqrt(dx*dx + dy*dy);
       const angle = Math.atan2(dy, dx);
 
       const clampedDist = Math.min(dist, radius);
@@ -286,12 +249,8 @@ export const Game = {
   drawScene() {
     this.ctx.clearRect(0, 0, this.GAME_WIDTH, this.GAME_HEIGHT);
 
-    // Draw sink (check naturalWidth to avoid broken images)
-    if (
-      this.images.sink &&
-      this.images.sink.complete &&
-      this.images.sink.naturalWidth > 0
-    ) {
+    // Draw sink
+    if (this.images.sink.complete) {
       this.ctx.save();
       this.ctx.translate(this.zones.sink.x + this.zones.sink.width, this.zones.sink.y);
       this.ctx.scale(-1.2, 1);
@@ -300,11 +259,7 @@ export const Game = {
     }
 
     // bustub
-    if (
-      this.images.bustub &&
-      this.images.bustub.complete &&
-      this.images.bustub.naturalWidth > 0
-    ) {
+    if (this.images.bustub.complete) {
       const scaleFactor = 2.5;
       const newW = this.zones.dishSpawn.width * scaleFactor;
       const newH = this.zones.dishSpawn.height * scaleFactor;
@@ -317,11 +272,7 @@ export const Game = {
     }
 
     // shelf + stored dishes
-    if (
-      this.images.shelf &&
-      this.images.shelf.complete &&
-      this.images.shelf.naturalWidth > 0
-    ) {
+    if (this.images.shelf.complete) {
       this.ctx.drawImage(
         this.images.shelf,
         this.zones.shelf.x,
@@ -330,23 +281,17 @@ export const Game = {
         this.zones.shelf.height
       );
 
-      // Draw stored dishes on the shelf
       Object.entries(this.storedDishes).forEach(([type, count]) => {
         if (count > 0) {
           const zone = this.zones.shelf.zones[type];
           const itemKey = 'clean' + type.charAt(0).toUpperCase() + type.slice(1);
           const image = this.images[itemKey];
-          if (
-            image &&
-            image.complete &&
-            image.naturalWidth > 0
-          ) {
+          if (image && image.complete) {
             let shelfDrawSize = 40;
             if (type === 'plate' || type === 'bowl') {
               shelfDrawSize = 60;
             }
             this.ctx.drawImage(image, zone.x, zone.y, shelfDrawSize, shelfDrawSize);
-
             this.ctx.fillStyle = '#000';
             this.ctx.font = '14px Mega';
             this.ctx.fillText(`x${count}`, zone.x + shelfDrawSize + 5, zone.y + shelfDrawSize / 2);
@@ -363,11 +308,7 @@ export const Game = {
       const capitalType = this.player.heldItem.type.charAt(0).toUpperCase() + this.player.heldItem.type.slice(1);
       const itemKey = prefix + capitalType;
       const itemImg = this.images[itemKey];
-      if (
-        itemImg &&
-        itemImg.complete &&
-        itemImg.naturalWidth > 0
-      ) {
+      if (itemImg && itemImg.complete) {
         let itemSize = 80;
         if (this.player.heldItem.type === 'plate') itemSize = this.PLATE_SIZE;
         if (this.player.heldItem.type === 'bowl')  itemSize = this.BOWL_SIZE;
@@ -448,20 +389,17 @@ export const Game = {
       height: this.PLAYER_SIZE
     };
     if (!this.player.heldItem) {
-      // Pick up dirty dish if at dishSpawn
       if (this.checkCollision(rectPlayer, this.zones.dishSpawn)) {
         const randomType = ['plate','bowl','cup'][Math.floor(Math.random()*3)];
         this.player.heldItem = { type: randomType, state: 'dirty' };
       }
     }
     else if (this.player.heldItem.state === 'dirty') {
-      // Start washing if at sink
       if (this.checkCollision(rectPlayer, this.zones.sink)) {
         this.player.isWashing = true;
       }
     }
     else if (this.player.heldItem.state === 'clean') {
-      // Put away if at correct shelf zone
       const shelfZone = this.zones.shelf.zones[this.player.heldItem.type];
       if (
         this.checkCollision(rectPlayer, shelfZone) &&
