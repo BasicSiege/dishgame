@@ -15,7 +15,44 @@
 </head>
 <body>
 
+  <script>
+    function generateDJFavicon() {
+      const size = 40;
+      const canvas = document.createElement('canvas');
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d');
 
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, size, size);
+
+      ctx.font = 'bold 16px "Press Start 2P", sans-serif';
+      ctx.fillStyle = '#fff';
+
+      const text = "DJ";
+
+      const textMetrics = ctx.measureText(text);
+      const textWidth = textMetrics.width;
+
+      let textHeight = 16;
+      const x = (size - textWidth) / 2;
+      const y = (size - textHeight) / 2 + textHeight;
+
+      ctx.fillText(text, x, y);
+
+      let link = document.querySelector("link[rel='icon']") || document.createElement('link');
+      link.rel = 'icon';
+      link.type = 'image/png';
+      link.href = canvas.toDataURL('image/png');
+      if (!document.querySelector("link[rel='icon']")) {
+        document.head.appendChild(link);
+      }
+    }
+    window.addEventListener('DOMContentLoaded', () => {
+      generateDJFavicon();
+    });
+  </script>
+  
   <!-- Main Menu -->
   <div id="mainMenu">
     <h1 class="menu-title">Dishwashing Joys</h1>
@@ -24,16 +61,6 @@
     <button class="menu-button" data-action="open-settings">Settings</button>
     <button class="menu-button" data-action="open-help">Help</button>
   </div>
-
-  <script>
-    const mainMenu = document.getElementById('mainMenu');
-
-    mainMenu.addEventListener('click', (event) => {
-      if (event.target.matches('.menu-button')) {
-        console.log(`Button clicked! data-action: ${event.target.dataset.action}`);
-      }
-    });
-  </script>
 
   <!-- In-Game UI -->
   <div id="inGameMenu">
