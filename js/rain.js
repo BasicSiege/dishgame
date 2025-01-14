@@ -2,12 +2,12 @@
 
 // List of all images you want to rain
 const RAIN_IMAGES = [
-    "assets/art/cleanplate.png",
-    "assets/art/dirtyplate.png",
-    "assets/art/cleanbowl.png",
-    "assets/art/dirtybowl.png",
-    "assets/art/cleancup.png",
-    "assets/art/dirtycup.png"
+    "./assets/art/cleanPlate.png",
+    "./assets/art/dirtyPlate.png",
+    "./assets/art/cleanBowl.png",
+    "./assets/art/dirtyBowl.png",
+    "./assets/art/cleanCup.png",
+    "./assets/art/dirtyCup.png"
   ];
   
   // How often (ms) to create a new falling image
