@@ -60,8 +60,8 @@ export const Game = {
    */
   loadAssets() {
     const toLoad = [
-      'dirtyPlate','cleanPlate','dirtyBowl','cleanBowl',
-      'dirtyCup','cleanCup','shelf','sink','bustub'
+      'dirtyplate','cleanplate','dirtybowl','cleanbowl',
+      'dirtycup','cleancup','shelf','sink','bustub'
     ];
 
     let loadedCount = 0;
