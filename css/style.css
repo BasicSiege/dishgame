@@ -332,3 +332,33 @@ canvas {
   bottom: 10px;
   right: 10px;
 }
+
+#rainContainer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;  /* Let clicks pass through to menu */
+  z-index: 1;  /* Behind the menu */
+  overflow: hidden;
+}
+
+.rain-drop {
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  opacity: 0.5;
+  animation: fall linear forwards;
+  filter: blur(1px);  /* Slight blur for depth */
+  transform: rotate(15deg);  /* Slight tilt */
+}
+
+@keyframes fall {
+  from {
+    transform: translateY(0) rotate(15deg);
+  }
+  to {
+    transform: translateY(calc(100vh + 50px)) rotate(375deg);  /* Full rotation plus initial tilt */
+  }
+}
