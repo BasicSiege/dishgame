@@ -352,7 +352,6 @@ canvas {
   animation: fall linear forwards;
   filter: blur(1px);  /* Slight blur for depth */
   transform: rotate(15deg);  /* Slight tilt */
-  z-index: -1;
 }
 
 @keyframes fall {
