@@ -182,12 +182,12 @@
     import { SpritePlayer } from './js/spriteplayer.js';
     import { Game } from './js/game.js';
     import { UI } from './js/ui.js';
-    import { startRain } from './js/rain.js';  // Add this import
+    import { startRain, stopRain } from './js/rain.js';  // Import both functions
 
     // Initialize game
     window.addEventListener('DOMContentLoaded', () => {
         generateDJFavicon();
-        startRain();  // Start the rain effect
+        startRain();  // Start rain only at beginning
         Game.player = new SpritePlayer();
         UI.initialize(Game);
     });
