@@ -2,7 +2,7 @@
    Core Game Logic
 */
 
-import { SpritePlayer } from './spritePlayer.js';
+import { SpritePlayer } from './spriteplayer.js';
 
 export const Game = {
   player: null,
