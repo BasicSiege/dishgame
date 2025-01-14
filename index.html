@@ -15,19 +15,7 @@
 </head>
 <body>
 
-  <script>
-    // Select the parent div
-    const mainMenu = document.getElementById('mainMenu');
-    
-    // Listen for clicks on the parent
-    mainMenu.addEventListener('click', (event) => {
-      // Check if the clicked element is a button
-      if (event.target.matches('.menu-button')) {
-        console.log(`Button clicked! data-action: ${event.target.dataset.action}`);
-      }
-    });
-  </script>
-  
+
   <!-- Main Menu -->
   <div id="mainMenu">
     <h1 class="menu-title">Dishwashing Joys</h1>
@@ -36,6 +24,16 @@
     <button class="menu-button" data-action="open-settings">Settings</button>
     <button class="menu-button" data-action="open-help">Help</button>
   </div>
+
+  <script>
+    const mainMenu = document.getElementById('mainMenu');
+
+    mainMenu.addEventListener('click', (event) => {
+      if (event.target.matches('.menu-button')) {
+        console.log(`Button clicked! data-action: ${event.target.dataset.action}`);
+      }
+    });
+  </script>
 
   <!-- In-Game UI -->
   <div id="inGameMenu">
