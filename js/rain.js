@@ -1,5 +1,4 @@
-// Place rain.js in your js folder:
-// /js/rain.js
+// js/rain.js
 export const RAIN_IMAGES = [
     "./assets/art/cleanPlate.png",
     "./assets/art/dirtyPlate.png",
@@ -17,7 +16,11 @@ function spawnRainDrop() {
     const mainMenu = document.getElementById("mainMenu");
     const rainContainer = document.getElementById("rainContainer");
 
-    if (!mainMenu || !rainContainer) return;
+    // Only spawn if main menu is visible
+    if (!mainMenu || !rainContainer || mainMenu.style.display === 'none') {
+        stopRain();
+        return;
+    }
 
     const buttons = mainMenu.querySelectorAll(".menu-button");
     const buttonRects = Array.from(buttons).map(btn => btn.getBoundingClientRect());
@@ -68,6 +71,11 @@ function spawnRainDrop() {
 
 export function startRain() {
     if (!spawnIntervalId) {
+        // Clear any existing drops
+        const rainContainer = document.getElementById("rainContainer");
+        if (rainContainer) {
+            rainContainer.innerHTML = '';
+        }
         spawnIntervalId = setInterval(spawnRainDrop, SPAWN_INTERVAL);
     }
 }
@@ -76,5 +84,11 @@ export function stopRain() {
     if (spawnIntervalId) {
         clearInterval(spawnIntervalId);
         spawnIntervalId = null;
+        
+        // Clear existing drops
+        const rainContainer = document.getElementById("rainContainer");
+        if (rainContainer) {
+            rainContainer.innerHTML = '';
+        }
     }
 }
