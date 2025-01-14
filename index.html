@@ -178,14 +178,19 @@
   <!-- Fullscreen Button -->
   <button id="fullscreenBtn" class="fullscreen-button">Fullscreen</button>
 
-  <script type="module">
+<script type="module">
     import { SpritePlayer } from './js/spriteplayer.js';
     import { Game } from './js/game.js';
     import { UI } from './js/ui.js';
+    import { startRain } from './js/rain.js';  // Add this import
 
     // Initialize game
-    Game.player = new SpritePlayer();
-    UI.initialize(Game);
-  </script>
+    window.addEventListener('DOMContentLoaded', () => {
+        generateDJFavicon();
+        startRain();  // Start the rain effect
+        Game.player = new SpritePlayer();
+        UI.initialize(Game);
+    });
+</script>
 </body>
 </html>
