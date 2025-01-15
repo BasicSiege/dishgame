@@ -131,16 +131,20 @@ export class SpritePlayer {
   }
 
   update(deltaMs, inputKeys) {
-    // Movement
+    // Store old position in case we need to revert (collision)
+    const oldX = this.x;
+    const oldY = this.y;
+  
+    // Movement (existing)
     const moveAmt = this.pixelPerSecond * (deltaMs / 1000);
     let dx = 0, dy = 0;
     if (inputKeys.up)    dy -= moveAmt;
     if (inputKeys.down)  dy += moveAmt;
     if (inputKeys.left)  dx -= moveAmt;
     if (inputKeys.right) dx += moveAmt;
-
+  
     this.isMoving = (dx !== 0 || dy !== 0);
-
+  
     if (this.isMoving) {
       const newDir = this.computeDirection(inputKeys);
       if (newDir !== this.direction) {
@@ -149,18 +153,37 @@ export class SpritePlayer {
         this.frameTime = 0;
       }
     }
-
+  
     this.x += dx;
     this.y += dy;
-
-    // Keep within 800x600 minus sprite size
+  
+    // Keep within 800x600 minus sprite size (existing)
     this.x = Math.max(0, Math.min(800 - 70, this.x));
     this.y = Math.max(0, Math.min(600 - 100, this.y));
-
+  
+    // ADDED: Collision with table
+    const playerRect = {
+      x: this.x,
+      y: this.y,
+      width: 70,   // approx sprite bounding box
+      height: 100
+    };
+  
+    if (this.game) {
+      const tableRect = this.game.zones.table;
+      if (this.game.checkCollision(playerRect, tableRect)) {
+        // Revert if colliding
+        this.x = oldX;
+        this.y = oldY;
+      }
+    }
+  
+    // Animate and update DOM position (existing)
     this.animate(deltaMs);
     this.element.style.left = `${this.x}px`;
     this.element.style.top = `${this.y}px`;
   }
+  
 
   computeDirection(keys) {
     const { up, down, left, right } = keys;
