@@ -30,6 +30,7 @@ export const Game = {
   bgmVolume: 50,
   sfxVolume: 50,
 
+  // You can still keep these if you want "logical" sizes for the game
   GAME_WIDTH: 800,
   GAME_HEIGHT: 600,
   PLAYER_SIZE: 48,
@@ -50,6 +51,14 @@ export const Game = {
         plate: { x: 620, y: 400, width: 110, height: 64 },
         cup:   { x: 620, y: 480, width: 110, height: 64 }
       }
+    },
+  
+    // ADDED this block:
+    table: {
+      x: 400 - 64, // Center horizontally (400 is half of 800)
+      y: 300 - 32, // Center vertically   (300 is half of 600)
+      width: 128,
+      height: 64
     }
   },
 
@@ -67,14 +76,14 @@ export const Game = {
     // Intervals
     setInterval(() => this.removeDishes(), 1000);
 
-    // Setup input
+    // Setup input (keyboard only)
     this.setupInput();
   },
 
   loadAssets() {
     const toLoad = [
       "dirtyPlate","cleanPlate","dirtyBowl","cleanBowl",
-      "dirtyCup","cleanCup","shelf","sink","bustub"
+      "dirtyCup","cleanCup","shelf","sink","bustub", "table", "floor"
     ];
     toLoad.forEach(name => {
       this.images[name] = new Image();
@@ -83,6 +92,7 @@ export const Game = {
   },
 
   setupInput() {
+    // Keyboard (desktop) controls
     window.addEventListener('keydown', e => {
       switch(e.key.toLowerCase()) {
         case 'w': case 'arrowup':    this.inputKeys.up = true;    break;
@@ -91,6 +101,7 @@ export const Game = {
         case 'd': case 'arrowright': this.inputKeys.right = true; break;
         case 'e':
           this.inputKeys.e = true;
+          // Only handle interaction if not currently washing
           if (!this.player.isWashing) this.handleInteraction();
           break;
         case 'escape':
@@ -98,7 +109,7 @@ export const Game = {
             this.gamePaused ? this.resumeGame() : this.pauseGame();
           }
           break;
-        // (ADDED) Press F to toggle fullscreen
+        // Press F to toggle fullscreen
         case 'f':
           this.toggleFullscreen();
           break;
@@ -116,74 +127,6 @@ export const Game = {
           this.player.isWashing = false;
           break;
       }
-    });
-
-    // Mobile Joystick
-    const joystickContainer = document.getElementById('joystickContainer');
-    const joystickHandle = document.getElementById('joystickHandle');
-    let joystickActive = false;
-    let joystickStartX = 0;
-    let joystickStartY = 0;
-
-    joystickContainer.addEventListener('touchstart', e => {
-      e.preventDefault();
-      joystickActive = true;
-      const touch = e.changedTouches[0];
-      joystickStartX = touch.pageX;
-      joystickStartY = touch.pageY;
-    }, { passive: false });
-
-    joystickContainer.addEventListener('touchmove', e => {
-      if (!joystickActive) return;
-      e.preventDefault();
-      const touch = e.changedTouches[0];
-      const dx = touch.pageX - joystickStartX;
-      const dy = touch.pageY - joystickStartY;
-      const radius = 60;
-      const dist = Math.sqrt(dx*dx + dy*dy);
-      const angle = Math.atan2(dy, dx);
-
-      const clampedDist = Math.min(dist, radius);
-      const handleX = radius + clampedDist * Math.cos(angle);
-      const handleY = radius + clampedDist * Math.sin(angle);
-
-      joystickHandle.style.left = (handleX - 20) + 'px';
-      joystickHandle.style.top = (handleY - 20) + 'px';
-
-      const deadZone = 10;
-      if (dist > deadZone) {
-        this.inputKeys.up = (Math.abs(dy) > Math.abs(dx) && dy < 0);
-        this.inputKeys.down = (Math.abs(dy) > Math.abs(dx) && dy > 0);
-        this.inputKeys.left = (Math.abs(dx) > Math.abs(dy) && dx < 0);
-        this.inputKeys.right = (Math.abs(dx) > Math.abs(dy) && dx > 0);
-      } else {
-        this.inputKeys.up = false;
-        this.inputKeys.down = false;
-        this.inputKeys.left = false;
-        this.inputKeys.right = false;
-      }
-    }, { passive: false });
-
-    joystickContainer.addEventListener('touchend', () => {
-      joystickActive = false;
-      joystickHandle.style.left = 'calc(50% - 20px)';
-      joystickHandle.style.top = 'calc(50% - 20px)';
-      this.inputKeys.up = false;
-      this.inputKeys.down = false;
-      this.inputKeys.left = false;
-      this.inputKeys.right = false;
-    });
-
-    // Mobile Interact
-    const interactButton = document.getElementById('interactButton');
-    interactButton.addEventListener('touchstart', e => {
-      e.preventDefault();
-      this.inputKeys.e = true;
-      if (!this.player.isWashing) this.handleInteraction();
-    });
-    interactButton.addEventListener('touchend', () => {
-      this.inputKeys.e = false;
-      this.player.isWashing = false;
     });
   },
 
@@ -247,14 +190,46 @@ export const Game = {
   },
 
   drawScene() {
-    this.ctx.clearRect(0, 0, this.GAME_WIDTH, this.GAME_HEIGHT);
+    // Clear the full canvas area
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+    // If you want to preserve a "logical" 800x600 coordinate system
+    // and scale it automatically, you could do something like:
+    //
+    // const scaleX = this.canvas.width / this.GAME_WIDTH;
+    // const scaleY = this.canvas.height / this.GAME_HEIGHT;
+    // this.ctx.save();
+    // this.ctx.scale(scaleX, scaleY);
+    //
+    // ... then draw everything at your "logical" coords ...
+    //
+    // this.ctx.restore();
+    //
+    // For now, let's just draw relative to this.canvas's actual size
+    // or use your original fixed x,y if you want them.
+
+    // 1) Draw the floor, covering the 800x600 area (ADDED)
+    if (this.images.floor.complete) {
+      this.ctx.drawImage(
+        this.images.floor,
+        0,
+        0,
+        this.GAME_WIDTH,
+        this.GAME_HEIGHT
+      );
+    }
 
     // Draw sink
     if (this.images.sink.complete) {
       this.ctx.save();
       this.ctx.translate(this.zones.sink.x + this.zones.sink.width, this.zones.sink.y);
       this.ctx.scale(-1.2, 1);
-      this.ctx.drawImage(this.images.sink, 0, 0, this.zones.sink.width, this.zones.sink.height);
+      this.ctx.drawImage(
+        this.images.sink,
+        0, 0,
+        this.zones.sink.width,
+        this.zones.sink.height
+      );
       this.ctx.restore();
     }
 
@@ -271,6 +246,28 @@ export const Game = {
       );
     }
 
+    // 2) Draw the table in the middle (ADDED)
+    if (this.images.table.complete) {
+      const tbl = this.zones.table;
+      const scaleFactor = 1.6;
+      const newW = tbl.width * scaleFactor;
+      const newH = tbl.height * scaleFactor;
+
+      // Center of 800x600 is (400, 300)
+      // So for the new size, half is newW/2 and newH/2
+      const centerX = 400 - newW / 2;
+      const centerY = 300 - newH / 2;
+
+      this.ctx.drawImage(
+        this.images.table,
+        centerX,
+        centerY,
+        newW,
+        newH
+      );
+    }
+
+
     // shelf + stored dishes
     if (this.images.shelf.complete) {
       this.ctx.drawImage(
@@ -280,6 +277,8 @@ export const Game = {
         this.zones.shelf.width,
         this.zones.shelf.height
       );
+
+
 
       Object.entries(this.storedDishes).forEach(([type, count]) => {
         if (count > 0) {
@@ -490,7 +489,7 @@ export const Game = {
     }
   },
 
-  // (ADDED) Toggle Fullscreen
+  // Toggle Fullscreen
   toggleFullscreen() {
     const doc = document;
     const docEl = document.documentElement;
