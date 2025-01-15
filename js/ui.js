@@ -16,6 +16,7 @@ export const UI = {
         button.addEventListener('click', () => this.openSettings());
     });
     document.querySelector('[data-action="open-help"]').addEventListener('click', () => this.openHelp());
+    document.querySelector('[data-action="open-credits"]').addEventListener('click', () => this.openCredits());
     // In-Game Buttons
     document.querySelector('[data-action="pause-game"]').addEventListener('click', () => this.pauseGame());
     document.querySelector('[data-action="resume-game"]').addEventListener('click', () => this.resumeGame());
@@ -74,6 +75,10 @@ export const UI = {
   openHelp() {
     if (this.Game.gameStarted && !this.Game.gamePaused) this.Game.pauseGame();
     this.openModal('helpModal');
+  },
+  openCredits() {
+    if (this.Game.gameStarted && !this.Game.gamePaused) this.Game.pauseGame();
+    this.openModal('creditsModal');
   },
   openModal(modalId) {
     document.getElementById(modalId).style.display = 'block';
