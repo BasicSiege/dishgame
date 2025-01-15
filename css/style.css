@@ -352,7 +352,7 @@ canvas {
   height: 60px;
   opacity: 0.5;
   animation: fall linear forwards;
-  filter: blur(1px);  /* Slight blur for depth */
+  /*filter: blur(1px);   Slight blur for depth */
   transform: rotate(15deg);  /* Slight tilt */
 }
 
