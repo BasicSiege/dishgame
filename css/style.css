@@ -283,28 +283,39 @@ canvas {
   100% { transform: translateY(0px); }
 }
 
-/* Mobile Controls */
 #mobileControls {
   /* On screens larger than 1024px, hide by default (override below if needed) */
   display: none;
 }
 
-/* Show controls if width <= 1024px */
 @media (max-width: 1024px) {
   #mobileControls {
     display: flex;
-    justify-content: space-between;
     position: fixed;
     bottom: 10px;
     width: 100%;
     z-index: 99;
     padding: 0 20px;
+    /* 'justify-content: space-between' ensures
+       that .joystick-side is on the left
+       and .interact-side is on the right */
+    justify-content: space-between;
   }
-  
+
   .joystick-side,
   .interact-side {
     display: flex;
     align-items: center;
+  }
+  
+  /* If you want the joystick to definitely "stick" to the left: */
+  .joystick-side {
+    justify-content: flex-start;
+  }
+
+  /* And the Interact button to definitely "stick" to the right: */
+  .interact-side {
+    justify-content: flex-end;
   }
 }
 
