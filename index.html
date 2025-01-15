@@ -4,16 +4,18 @@
   <meta charset="UTF-8" />
   <title>Dishwashing Joys</title>
 
+  <!-- Viewport meta for responsiveness -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+
   <!-- 8-bit style font -->
   <link
     href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap"
     rel="stylesheet"
   />
+
+  <!-- Your main CSS file (containing the large snippet you provided) -->
   <link rel="stylesheet" href="./css/style.css" />
 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-</head>
-<body>
   <script>
     function generateDJFavicon() {
       const size = 40;
@@ -51,16 +53,19 @@
       generateDJFavicon();
     });
   </script>
-  
-<!-- Main Menu -->
-<div id="mainMenu">
+</head>
+<body>
+
+
+  <!-- Main Menu -->
+  <div id="mainMenu">
     <div id="rainContainer"></div>  <!-- Move it here -->
     <h1 class="menu-title">Dishwashing Joys</h1>
     <button class="menu-button" data-action="start-game">Play</button>
     <button class="menu-button" data-action="open-shop">Shop</button>
     <button class="menu-button" data-action="open-settings">Settings</button>
     <button class="menu-button" data-action="open-help">Help</button>
-</div>
+  </div>
 
   <!-- In-Game UI -->
   <div id="inGameMenu">
@@ -124,38 +129,39 @@
     </div>
   </div>
   
-<!-- Shop Modal -->
-<div id="shopModal" class="modal">
-  <span class="close-button" data-action="close-shop">&times;</span>
-  <h2 class="modal-title">UPGRADE SHOP</h2>
-  <div class="modal-content">
-    <div class="shop-item">
-      <div>
-        <h3>Speed Boost</h3>
-        <p>Move 20% faster</p>
+  <!-- Shop Modal -->
+  <div id="shopModal" class="modal">
+    <span class="close-button" data-action="close-shop">&times;</span>
+    <h2 class="modal-title">UPGRADE SHOP</h2>
+    <div class="modal-content">
+      <div class="shop-item">
+        <div>
+          <h3>Speed Boost</h3>
+          <p>Move 20% faster</p>
+        </div>
+        <button data-action="purchase-speed" id="speedUpgradeBtn">Buy (100)</button>
       </div>
-      <button data-action="purchase-speed" id="speedUpgradeBtn">Buy (100)</button>
-    </div>
-    <div class="shop-item">
-      <div>
-        <h3>Washing Master</h3>
-        <p>Wash dishes 30% faster</p>
+      <div class="shop-item">
+        <div>
+          <h3>Washing Master</h3>
+          <p>Wash dishes 30% faster</p>
+        </div>
+        <button data-action="purchase-washing" id="washingUpgradeBtn">Buy (150)</button>
       </div>
-      <button data-action="purchase-washing" id="washingUpgradeBtn">Buy (150)</button>
-    </div>
-    <div class="shop-item">
-      <div>
-        <h3>Extra Storage</h3>
-        <p>Store more dishes on shelves</p>
+      <div class="shop-item">
+        <div>
+          <h3>Extra Storage</h3>
+          <p>Store more dishes on shelves</p>
+        </div>
+        <button data-action="purchase-storage" id="storageUpgradeBtn">Buy (200)</button>
       </div>
-      <button data-action="purchase-storage" id="storageUpgradeBtn">Buy (200)</button>
     </div>
   </div>
-</div>
 
   <!-- Game Container -->
+  <!-- Remove width and height attributes from the canvas -->
   <div id="gameContainer">
-    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <canvas id="gameCanvas"></canvas>
     <div id="scoreDisplay">Score: 0</div>
     <div id="cleanedDishesDisplay">Cleaned: 0</div>
     <div id="promptText"></div>
@@ -178,19 +184,30 @@
   <!-- Fullscreen Button -->
   <button id="fullscreenBtn" class="fullscreen-button">Fullscreen</button>
 
-<script type="module">
+  <!-- Your main JS scripts -->
+  <script type="module">
     import { SpritePlayer } from './js/spriteplayer.js';
     import { Game } from './js/game.js';
     import { UI } from './js/ui.js';
-    import { startRain, stopRain } from './js/rain.js';  // Import both functions
+    import { startRain, stopRain } from './js/rain.js'; 
+    import { setupMobileControls } from './js/mobile.js';
 
-    // Initialize game
-    window.addEventListener('DOMContentLoaded', () => {
-        generateDJFavicon();
-        startRain();  // Start rain only at beginning
-        Game.player = new SpritePlayer();
-        UI.initialize(Game);
-    });
-</script>
+    // Initialize the Game
+    Game.player = new SpritePlayer();
+    UI.initialize(Game);
+    Game.init(); // sets up the canvas context, loads assets, etc.
+
+    // Resize the canvas to full window, then do it again on any window resize
+    function resizeCanvas() {
+      const canvas = document.getElementById('gameCanvas');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    // If you have a separate mobile controls file, set that up too:
+    // setupMobileControls(Game);
+  </script>
 </body>
 </html>
